@@ -8,3 +8,154 @@ html{min-height:100%;overflow-x:hidden}body{min-height:100vh;min-height:100svh}.
 .gesture-help{font-size:clamp(16px,2vw,25px)}.camera-heading{gap:10px}.camera-status{font-size:clamp(11px,1.2vw,14px)}
 @media(max-width:850px){.kiosk-shell{padding-top:max(8px,env(safe-area-inset-top))}.masthead{gap:8px}.masthead h1{font-size:clamp(27px,7vw,42px)}.masthead .eyebrow{font-size:clamp(10px,2.4vw,14px)}.masthead .lotus{font-size:clamp(28px,8vw,44px)}.stage{width:min(620px,100%);gap:12px;margin:12px auto;align-content:start}.camera-frame{height:auto;min-height:0;aspect-ratio:4/3}.camera-card{padding:10px}.camera-heading{font-size:clamp(12px,3vw,17px);margin-bottom:7px}.coach{font-size:clamp(16px,4vw,23px);min-height:0}.message-card{min-height:0;padding:22px 18px}.message-card:before{inset:8px}.message-card h2{font-size:clamp(27px,7vw,40px)}.message-card p{font-size:clamp(18px,4.6vw,26px)}.content .question{font-size:clamp(20px,5vw,29px)}.option{font-size:clamp(18px,4.5vw,23px)}.option .number{font-size:inherit;width:36px}.camera-ring{width:72px;height:72px}.camera-ring span{font-size:35px}.mic-retry{font-size:17px}.blessing-image{width:min(30vw,200px);height:min(30vw,200px)}footer{font-size:14px;flex-wrap:wrap}}
 @media(max-width:500px){.stage{gap:10px}.camera-frame{height:auto;min-height:0;aspect-ratio:4/3}.camera-ring{width:58px;height:58px}.camera-ring:after{inset:5px}.camera-ring span{font-size:28px}.message-card{padding:18px 14px}.message-card h2{font-size:clamp(24px,7.5vw,34px)}.message-card p{font-size:clamp(17px,4.8vw,23px)}.content .question{font-size:20px}.options{gap:6px}.option{font-size:17px;padding:7px 9px}.eyebrow{font-size:12px}.lotus{font-size:30px}.masthead h1{font-size:clamp(25px,8vw,33px)}footer{display:none}.camera-status{max-width:68%;font-size:11px}.camera-heading{font-size:12px}.voice-status{font-size:17px!important}}
+
+/* Base desktop kiosk layout: keeps camera preview compact and stable */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 20px;
+  width: min(1080px, 100%);
+  margin: 16px auto;
+  align-items: start;
+}
+.camera-card {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+.camera-frame {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  aspect-ratio: 4/3;
+}
+
+/* Blessing state: hide camera preview and center the blessing presentation */
+.kiosk-shell[data-state="BLESSING"] .camera-card,
+.kiosk-shell.is-blessing .camera-card {
+  display: none !important;
+}
+
+.kiosk-shell[data-state="BLESSING"] .stage,
+.kiosk-shell.is-blessing .stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(780px, 100%);
+  margin: 12px auto;
+}
+
+.kiosk-shell[data-state="BLESSING"] .message-card,
+.kiosk-shell.is-blessing .message-card {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  text-align: center;
+  min-height: auto;
+}
+
+.kiosk-shell[data-state="BLESSING"] .message-card h2,
+.kiosk-shell.is-blessing .message-card h2 {
+  margin: 8px auto 4px;
+  font-size: clamp(26px, 4vw, 36px);
+  line-height: 1.2;
+}
+
+.kiosk-shell[data-state="BLESSING"] .blessing-slogan,
+.kiosk-shell.is-blessing .blessing-slogan {
+  margin: 6px auto;
+  font-size: clamp(16px, 2.2vw, 21px);
+  line-height: 1.35;
+  color: #7b2936;
+  font-weight: 700;
+}
+
+.kiosk-shell[data-state="BLESSING"] .message-card p,
+.kiosk-shell.is-blessing .message-card p {
+  margin: 6px auto;
+  font-size: clamp(15px, 2vw, 19px);
+  line-height: 1.35;
+}
+
+.kiosk-shell[data-state="BLESSING"] .gesture-help,
+.kiosk-shell.is-blessing .gesture-help {
+  margin-top: 8px;
+  font-size: clamp(14px, 1.8vw, 17px);
+  opacity: 0.88;
+}
+
+/* Goddess image animation and viewport fitting */
+.blessing-image {
+  display: block;
+  margin: 0 auto 10px;
+  width: auto;
+  height: min(28vh, 200px);
+  max-width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: contain;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(181, 45, 71, 0.22);
+  animation: goddessGlowEnter 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes goddessGlowEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.86) translateY(16px);
+    filter: drop-shadow(0 0 0 rgba(237, 155, 39, 0));
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(0);
+    filter: drop-shadow(0 8px 24px rgba(237, 155, 39, 0.5));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: drop-shadow(0 6px 18px rgba(237, 155, 39, 0.25));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blessing-image {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Responsive blessing sizing for tablets & mobile */
+@media (max-width: 850px) {
+  .kiosk-shell[data-state="BLESSING"] .stage,
+  .kiosk-shell.is-blessing .stage {
+    width: min(580px, 100%);
+    margin: 8px auto;
+  }
+  .kiosk-shell[data-state="BLESSING"] .message-card,
+  .kiosk-shell.is-blessing .message-card {
+    padding: 16px 18px;
+  }
+  .blessing-image {
+    height: min(24vh, 180px);
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 500px) {
+  .kiosk-shell[data-state="BLESSING"] .stage,
+  .kiosk-shell.is-blessing .stage {
+    margin: 4px auto;
+    gap: 6px;
+  }
+  .kiosk-shell[data-state="BLESSING"] .message-card,
+  .kiosk-shell.is-blessing .message-card {
+    padding: 12px 14px;
+  }
+  .blessing-image {
+    height: min(22vh, 140px);
+    margin-bottom: 6px;
+  }
+}
