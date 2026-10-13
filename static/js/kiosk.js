@@ -250,13 +250,13 @@
     if (mode === "IDLE") {
       setContent('<h2>Welcome, seeker of wisdom</h2><p>Say your name to begin your Navadurga quiz.</p><div class="gesture-help">🎙️ &nbsp; Speak your name</div>');
     } else if (mode === "NAME") {
-      const message = window.KIOSK_SIMULATE
-        ? '<p id="voice-status" class="feedback-reason" role="status">Microphone capture is disabled in simulation. Run the app normally to use the microphone.</p>'
-        : `<p id="voice-status" class="voice-status" role="${micErrorText ? "alert" : "status"}">${escapeHtml(payload.name ? `I heard ${payload.name}. Show 1 finger to confirm, or 2 to say it again.` : micErrorText || micStatusText || "The microphone is off. Enable it to say your name.")}</p>`;
-      const startButton = window.KIOSK_SIMULATE ? "" : `<button class="mic-retry" id="mic-start" type="button"${speechRecognitionActive ? " disabled" : ""}>${speechRecognitionActive ? "Microphone on — say your name" : "Enable microphone & say your name"}</button>`;
-      setContent(`<div class="microphone-icon" aria-hidden="true">${speechRecognitionActive ? "🔴" : "🎙️"}</div><h2>${escapeHtml(payload.prompt || "Please say your name")}</h2>${message}${startButton}<p class="gesture-help">${window.KIOSK_SIMULATE ? "Use the simulation test endpoint to provide a test name." : payload.name ? "Show 1 finger to confirm and start, or 2 fingers to say your name again" : "Allow microphone access, then say your name. Speech recognition may use your browser's online speech service."}</p>`);
-    } else if (mode === "QUESTION") {
-      const seconds = Number(payload.seconds) || 20;
+      const simulationLabel = window.KIOSK_SIMULATE
+        ? 'Microphone capture is disabled in simulation mode, but you can still trigger the browser microphone when running the app normally.'
+        : micErrorText || micStatusText || "The microphone is off. Enable it to say your name.";
+      const message = `<p id="voice-status" class="${window.KIOSK_SIMULATE ? "feedback-reason" : "voice-status"}" role="${micErrorText ? "alert" : "status"}">${escapeHtml(payload.name ? `I heard ${payload.name}. Show 1 finger to confirm, or 2 to say it again.` : simulationLabel)}</p>`;
+      const startButton = `<button class="mic-retry" id="mic-start" type="button"${speechRecognitionActive ? " disabled" : ""}>${speechRecognitionActive ? "Microphone on — say your name" : "Enable microphone & say your name"}</button>`;
+      setContent(`<div class="microphone-icon" aria-hidden="true">${speechRecognitionActive ? "🔴" : "🎙️"}</div><h2>${escapeHtml(payload.prompt || "Please say your name")}</h2>${message}${startButton}<p class="gesture-help">${window.KIOSK_SIMULATE ? "Use the simulation test endpoint to provide a test name or run the app normally for live microphone capture." : payload.name ? "Show 1 finger to confirm and start, or 2 fingers to say your name again" : "Allow microphone access, then say your name. Speech recognition may use your browser's online speech service."}</p>`);
+    } else if (mode === "QUESTION") {      const seconds = Number(payload.seconds) || 20;
       const options = (payload.options || []).map((option, index) => `<div class="option"><span class="number">${index + 1}</span>${escapeHtml(option)}</div>`).join("");
       setContent(`<p class="timer">Question ${payload.number} of ${payload.total} &nbsp; • &nbsp; ${escapeHtml(payload.difficulty)}</p><div class="countdown-ring" id="countdown-ring" data-duration="${seconds}" data-ends="${payload.ends_at || ""}" style="--timer-progress:100%"><span>${seconds}</span></div><p class="question">${escapeHtml(payload.question)}</p><div class="options">${options}</div><p class="timer">Raise 1–4 fingers</p>`);
     } else if (mode === "FEEDBACK") {

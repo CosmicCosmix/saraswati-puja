@@ -1,28 +1,975 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Saraswati Puja Quiz</title>
-  <link rel="stylesheet" href="/static/css/kiosk.css">
-</head>
-<body>
-  <main class="kiosk-shell">
-    <header class="masthead"><div class="lotus" aria-hidden="true">❀</div><div><p class="eyebrow">NAVADURGA • NAVRATRI</p><h1>Saraswati Puja Quiz</h1></div><div class="lotus lotus-right" aria-hidden="true">❀</div></header>
-    <section class="stage">
-      <div class="camera-card">
-        <div class="camera-heading"><span>YOUR HAND ZONE</span><span class="camera-status" id="camera-status" role="status">Starting camera…</span></div>
-        <div class="camera-frame"><img src="/video" alt="Mirrored live camera preview with hand landmarks and hand-zone guide"><div class="camera-ring" id="gesture-ring"><span id="gesture-count">✋</span></div></div>
-        <p class="coach" id="coach">Stand in front of the camera</p>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Saraswati Puja Quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/kiosk.css">
+    <style>
+      :root {
+        --bg: #f4eeeb;
+        --panel: #f8f3f0;
+        --panel-strong: #f2e7e2;
+        --soft: #efe2dd;
+        --card: rgba(255,255,255,0.4);
+        --ink: #2e2223;
+        --muted: #756466;
+        --line: #d9c6c3;
+        --rose: #6a1127;
+        --rose-strong: #7c1225;
+        --rose-soft: #f9d8d6;
+        --amber: #d38f36;
+        --green: #2f7a5f;
+        --shadow: rgba(78, 53, 51, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Plus Jakarta Sans", Arial, sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      button, input, textarea { font: inherit; }
+
+      .kiosk-shell {
+        min-height: 100vh;
+        background: linear-gradient(#f7f2ef 0%, #f1e7e1 100%);
+      }
+
+      .topbar {
+        background: rgba(255,255,255,0.58);
+        border-bottom: 1px solid rgba(125, 102, 96, 0.18);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 12px rgba(78, 53, 51, 0.03);
+      }
+
+      .topbar-inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 12px 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px solid var(--rose);
+        display: grid;
+        place-items: center;
+        color: var(--rose);
+        font-weight: 700;
+        font-size: 18px;
+        background: rgba(255,255,255,0.5);
+      }
+
+      .brand-copy {
+        font-size: 11px;
+        line-height: 1.15;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--rose);
+        font-weight: 700;
+      }
+
+      .brand-copy strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 28px;
+        letter-spacing: 0.03em;
+      }
+
+      .workspace {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 18px 20px 16px;
+      }
+
+      .status-row {
+        background: rgba(255,255,255,0.28);
+        border: 1px solid rgba(120, 100, 99, 0.12);
+        border-radius: 18px;
+        padding: 14px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 4px 18px rgba(78, 53, 51, 0.04);
+      }
+
+      .status-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .question-label {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(1.1rem, 1.5vw, 2rem);
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: var(--rose);
+        white-space: nowrap;
+      }
+
+      .of-x {
+        color: var(--muted);
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .progress {
+        width: 200px;
+        height: 7px;
+        border-radius: 999px;
+        background: rgba(130, 111, 106, 0.18);
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        display: block;
+        height: 100%;
+        width: 30%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #c75a66, #946a51);
+      }
+
+      .score-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.24);
+        border: 1px solid rgba(120, 100, 99, 0.1);
+        border-radius: 999px;
+        padding: 8px 12px;
+        white-space: nowrap;
+      }
+
+      .score-pill .material-symbols-outlined {
+        color: var(--amber);
+        font-size: 18px;
+      }
+
+      .score-label {
+        font-size: 0.68rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .score-value {
+        font-weight: 700;
+        color: var(--rose);
+        font-size: 1.1rem;
+      }
+
+      .score-unit {
+        color: var(--amber);
+        font-size: 0.78rem;
+      }
+
+      .guide {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.73rem;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(120, 100, 99, 0.1);
+        border-radius: 999px;
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        justify-content: end;
+      }
+
+      .guide .material-symbols-outlined {
+        font-size: 18px;
+        color: var(--amber);
+      }
+
+      .guide strong {
+        color: var(--ink);
+      }
+
+      .main-grid {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        gap: 18px;
+        margin-top: 18px;
+      }
+
+      .panel {
+        background: rgba(255,255,255,0.26);
+        border: 1px solid rgba(120, 100, 99, 0.12);
+        border-radius: 22px;
+        box-shadow: 0 3px 16px var(--shadow);
+        padding: 16px;
+      }
+
+      .panel + .panel {
+        margin-top: 16px;
+      }
+
+      .camera-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        background: rgba(58, 129, 85, 0.08);
+        border: 1px solid rgba(58, 129, 85, 0.18);
+        color: var(--green);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: none;
+      }
+
+      .camera-status::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        display: block;
+      }
+
+      .camera-status.camera-error {
+        background: rgba(159, 42, 54, 0.08);
+        border-color: rgba(159, 42, 54, 0.18);
+        color: #8d1d2f;
+      }
+
+      .camera-status.camera-error::before {
+        background: #8d1d2f;
+      }
+
+      .hand-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .hand-header .label {
+        font-size: 0.7rem;
+        color: var(--muted);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(218, 234, 226, 0.8);
+        border-radius: 999px;
+        border: 1px solid rgba(97, 148, 122, 0.2);
+        color: var(--green);
+        padding: 4px 8px;
+        font-size: 0.68rem;
+        font-weight: 700;
+      }
+
+      .status-tag::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        display: inline-block;
+      }
+
+      .camera-box {
+        position: relative;
+        height: 260px;
+        overflow: hidden;
+        border-radius: 18px;
+        background: #e8d7cf;
+        border: 1px solid rgba(138, 103, 93, 0.2);
+      }
+
+      .camera-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: saturate(0.9) contrast(1.02);
+      }
+
+      .camera-box::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        border: 2px dashed rgba(206, 161, 128, 0.8);
+        border-radius: 14px;
+      }
+
+      .camera-ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        border: 4px solid rgba(205, 87, 73, 0.95);
+        box-shadow: 0 0 0 2px rgba(255,255,255,0.35);
+        display: grid;
+        place-items: center;
+        background: rgba(255,255,255,0.15);
+      }
+
+      .camera-ring::before {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border-radius: 50%;
+        border: 2px solid rgba(205, 87, 73, 0.9);
+      }
+
+      #gesture-count {
+        font-size: 28px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .coach {
+        margin: 12px 0 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+        min-height: 20px;
+      }
+
+      .voice-panel {
+        margin-top: 16px;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(120, 100, 99, 0.08);
+        border-radius: 18px;
+        padding: 14px;
+      }
+
+      .voice-stack {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 8px 10px;
+      }
+
+      .voice-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.5);
+        display: grid;
+        place-items: center;
+        color: var(--amber);
+      }
+
+      .voice-status {
+        font-size: 0.85rem;
+        color: var(--ink);
+        margin: 0;
+        min-height: 22px;
+      }
+
+      .voice-bars {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .voice-bars span {
+        display: block;
+        width: 5px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #d28a3f, #ba7247);
+        opacity: 0.8;
+      }
+
+      .voice-bars span:nth-child(1) { height: 8px; }
+      .voice-bars span:nth-child(2) { height: 12px; }
+      .voice-bars span:nth-child(3) { height: 16px; }
+      .voice-bars span:nth-child(4) { height: 20px; }
+      .voice-bars span:nth-child(5) { height: 12px; }
+
+      .replay-btn {
+        margin-top: 12px;
+        width: 100%;
+        border: 1px solid rgba(120, 100, 99, 0.15);
+        background: rgba(255,255,255,0.18);
+        border-radius: 12px;
+        padding: 10px 12px;
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      .info-box {
+        margin-top: 16px;
+        background: rgba(242, 222, 213, 0.7);
+        border: 1px solid rgba(150, 113, 104, 0.16);
+        border-radius: 16px;
+        padding: 14px;
+      }
+
+      .info-box strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--rose);
+      }
+
+      .info-box p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.92rem;
+      }
+
+      .question-panel {
+        background: rgba(255,255,255,0.16);
+        border: 1px solid rgba(120, 100, 99, 0.12);
+        border-radius: 22px;
+        padding: 18px 18px 12px;
+        box-shadow: 0 3px 16px var(--shadow);
+      }
+
+      .question-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .question-meta .dot {
+        color: rgba(120, 100, 99, 0.4);
+      }
+
+      .content {
+        margin-top: 18px;
+        min-height: 400px;
+      }
+
+      .content h2 {
+        margin: 0 0 16px;
+        font-family: "Playfair Display", Georgia, serif;
+        font-weight: 700;
+        font-size: clamp(2rem, 2.5vw, 3.1rem);
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        color: var(--ink);
+        max-width: 800px;
+      }
+
+      .question-copy {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .prompt-shell {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+        min-height: 300px;
+      }
+
+      .prompt-shell h2 {
+        margin: 0;
+      }
+
+      .prompt-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--ink);
+      }
+
+      .prompt-status[role="alert"] {
+        color: #8d1d2f;
+      }
+
+      .mic-button {
+        background: linear-gradient(180deg, #8f1730 0%, #751226 100%);
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        min-height: 48px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(122, 17, 39, 0.14);
+      }
+
+      .mic-button:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+
+      .prompt-help {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .options-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin: 18px 0 8px;
+      }
+
+      .option-card {
+        background: rgba(255,255,255,0.25);
+        border: 1px solid rgba(120, 100, 99, 0.12);
+        border-radius: 18px;
+        padding: 16px;
+        min-height: 132px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      }
+
+      .option-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(78, 53, 51, 0.05);
+      }
+
+      .option-card.selected {
+        background: rgba(243, 233, 230, 0.9);
+        border-color: rgba(122, 17, 39, 0.25);
+        box-shadow: 0 4px 16px rgba(122, 17, 39, 0.08);
+      }
+
+      .option-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .option-index {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(230, 221, 216, 0.9);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: var(--ink);
+        flex-shrink: 0;
+      }
+
+      .option-card.selected .option-index {
+        background: rgba(122, 17, 39, 0.92);
+        color: #fff;
+      }
+
+      .option-name {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(1.2rem, 1.6vw, 1.6rem);
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .option-sub {
+        display: block;
+        color: var(--muted);
+        font-size: 0.74rem;
+        letter-spacing: 0.02em;
+        margin-top: 3px;
+      }
+
+      .option-check {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid rgba(120,100,99,0.18);
+        display: grid;
+        place-items: center;
+        font-size: 0.8rem;
+        color: transparent;
+        background: rgba(255,255,255,0.2);
+      }
+
+      .option-card.selected .option-check {
+        background: var(--rose-strong);
+        border-color: var(--rose-strong);
+        color: #fff;
+      }
+
+      .option-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .option-voice {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+
+      .option-hand {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+      }
+
+      .option-voice .material-symbols-outlined,
+      .option-hand .material-symbols-outlined {
+        font-size: 15px;
+      }
+
+      .info-banner {
+        margin-top: 18px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: rgba(245, 229, 213, 0.8);
+        border: 1px solid rgba(120, 100, 99, 0.1);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .info-banner .material-symbols-outlined {
+        color: #b36f10;
+        font-size: 28px;
+      }
+
+      .info-banner strong {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--ink);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
+      }
+
+      .info-banner p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        margin-top: 16px;
+        padding-top: 12px;
+      }
+
+      .link-button,
+      .primary-button,
+      .ghost-button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: 0.18s ease;
+      }
+
+      .link-button {
+        background: rgba(255,255,255,0.22);
+        color: var(--ink);
+        border: 1px solid rgba(120,100,99,0.12);
+      }
+
+      .ghost-button {
+        color: var(--muted);
+        background: transparent;
+      }
+
+      .primary-button {
+        background: linear-gradient(180deg, #8f1730 0%, #761125 100%);
+        color: white;
+        box-shadow: 0 8px 18px rgba(122, 17, 39, 0.14);
+      }
+
+      .primary-button:hover,
+      .link-button:hover,
+      .ghost-button:hover {
+        filter: brightness(0.98);
+      }
+
+      .footer-strip {
+        max-width: 1260px;
+        margin: 18px auto 0;
+        padding: 14px 20px 20px;
+      }
+
+      .footer-strip-inner {
+        background: rgba(255,255,255,0.22);
+        border: 1px solid rgba(120,100,99,0.1);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+
+      .community {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .community-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.35);
+        display: grid;
+        place-items: center;
+        color: var(--rose);
+      }
+
+      .community strong {
+        color: var(--ink);
+      }
+
+      .study-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .study-links .divider {
+        color: rgba(120,100,99,0.45);
+      }
+
+      .bottom-bar {
+        background: rgba(255,255,255,0.22);
+        border-top: 1px solid rgba(120,100,99,0.12);
+        color: var(--muted);
+      }
+
+      .bottom-bar-inner {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.78rem;
+      }
+
+      .bottom-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .bottom-left .material-symbols-outlined {
+        color: var(--amber);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      @media (max-width: 980px) {
+        .main-grid { grid-template-columns: 1fr; }
+        .camera-box { height: 220px; }
+        .guide { justify-content: flex-start; }
+      }
+
+      @media (max-width: 640px) {
+        .status-row { flex-direction: column; align-items: flex-start; }
+        .status-left { width: 100%; }
+        .progress { width: 120px; }
+        .guide { width: 100%; justify-content: flex-start; }
+        .options-grid { grid-template-columns: 1fr; }
+        .actions { flex-direction: column; align-items: stretch; }
+        .footer-strip-inner, .bottom-bar-inner { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="kiosk-shell">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="brand" aria-label="Saraswati Puja Quiz">
+            <div class="brand-mark">❀</div>
+            <div class="brand-copy">
+              Navadurga
+              <strong>SRM</strong>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <div class="status-row">
+          <div class="status-left">
+            <div class="question-label">Question III</div>
+            <span class="of-x">of X</span>
+            <div class="progress" aria-label="question progress">
+              <span class="progress-bar"></span>
+            </div>
+          </div>
+
+          <div class="score-pill">
+            <span class="material-symbols-outlined">stars</span>
+            <span class="score-label">Score</span>
+            <span class="score-value">250</span>
+            <span class="score-unit">pts</span>
+          </div>
+
+          <div class="guide">
+            <span class="material-symbols-outlined">front_hand</span>
+            <span>Wave left: <strong>Prev</strong></span>
+            <span>•</span>
+            <span>Raise hand: <strong>Select</strong></span>
+            <span>•</span>
+            <span>Thumbs up: <strong>Confirm</strong></span>
+          </div>
+        </div>
+
+        <div class="main-grid">
+          <aside>
+            <div class="panel">
+              <div class="hand-header">
+                <span class="label">Hand Gesture Zone</span>
+                <span id="camera-status" class="camera-status" role="status">Starting camera…</span>
+              </div>
+
+              <div class="camera-box">
+                <img src="/video" alt="Live camera preview">
+                <div class="camera-ring" id="gesture-ring"><span id="gesture-count">✋</span></div>
+              </div>
+
+              <p class="coach" id="coach">Show your hand in frame</p>
+            </div>
+
+            <div class="voice-panel">
+              <div class="voice-stack">
+                <div class="voice-icon material-symbols-outlined">mic</div>
+                <div style="flex:1; min-width:0;">
+                  <p class="voice-status" id="voice-status-sidebar" role="status">Listening…</p>
+                </div>
+                <div class="voice-bars" aria-hidden="true">
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+
+              <button class="replay-btn" type="button">Repeat Question</button>
+            </div>
+
+            <div class="info-box">
+              <strong>Vidyas &amp; Sageet</strong>
+              <p>The veena is considered an instrument of divine harmony, intellect, and the tuning of the mind to cosmic truth.</p>
+            </div>
+          </aside>
+
+          <section class="question-panel">
+            <div class="question-meta">
+              <span>Navadurga</span>
+              <span class="dot">•</span>
+              <span>Sacred Traditions &amp; Music</span>
+              <span class="dot">•</span>
+              <span>Level: Intermediate</span>
+            </div>
+
+            <div id="content" class="content" aria-live="polite">
+              <div class="prompt-shell">
+                <div id="state-label" class="muted" style="display:none;">QUESTION</div>
+                <div class="microphone-icon" aria-hidden="true" style="font-size: 2.8rem;">🎙️</div>
+                <h2>Please say your name</h2>
+                <p id="voice-status" class="prompt-status" role="status">Enable the microphone and say your name to begin.</p>
+                <button id="mic-start" class="mic-button" type="button">Enable microphone &amp; say your name</button>
+                <p class="prompt-help">Allow microphone access in the browser, then say your name clearly. The kiosk will confirm it before starting the quiz.</p>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="link-button" type="button">← Previous Question</button>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <button class="ghost-button" type="button">Skip for Later</button>
+                <button class="primary-button" type="button">Submit Answer →</button>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
-      <div class="message-card" id="message-card" aria-live="polite">
-        <p class="eyebrow" id="state-label">WELCOME</p>
-        <div id="content" class="content"></div>
+
+      <div class="footer-strip">
+        <div class="footer-strip-inner">
+          <div class="community">
+            <div class="community-badge material-symbols-outlined">volunteer_activism</div>
+            <span><strong>1,420 students</strong> answered correctly this morning. Average time: <strong style="color:#af5f26;">8.4 seconds</strong>.</span>
+          </div>
+
+          <div class="study-links">
+            <span class="material-symbols-outlined">bookmark_border</span>
+            <span>Save to Study List</span>
+            <span class="divider">•</span>
+            <span class="material-symbols-outlined">share</span>
+            <span>Share Riddle</span>
+          </div>
+        </div>
       </div>
-    </section>
-    <footer><span>Show your hands in the frame</span><span class="divider">✦</span><span>Hands-free • Joyful • Learn together</span></footer>
-  </main>
-  <script>window.KIOSK_SIMULATE = {{ "true" if simulate else "false" }};</script>
-  <script src="/static/js/kiosk.js"></script>
-</body>
+
+      <footer class="bottom-bar">
+        <div class="bottom-bar-inner">
+          <div class="bottom-left">
+            <span class="material-symbols-outlined">front_hand</span>
+            <span>Show your hands in frame • Hands-free • Joyful • Learn together</span>
+          </div>
+          <div>Navadurga Festivity Celebration • © 2025 Saraswati Puja Cultural Foundation. All rights reserved.</div>
+        </div>
+      </footer>
+    </main>
+
+    <script>window.KIOSK_SIMULATE = {{ "true" if simulate else "false" }};</script>
+    <script src="/static/js/kiosk.js"></script>
+  </body>
 </html>
