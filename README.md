@@ -61,7 +61,7 @@ Run `python run.py --simulate` when no camera or microphone is available. The ge
 
 The default database is `data/kiosk.db` (SQLite WAL). Quiz results, settings, blessing logs, and timeout events remain local across restarts. Configure `DATABASE_URL` to use a different SQLAlchemy database URL if needed. Camera frames are processed in memory and exposed only as the local MJPEG preview. Speech recognition runs through the browser's Web Speech service, which may process audio outside this app; only the recognized name text is sent to this server. The app does not record or store microphone audio.
 
-The admin panel at `/admin` edits confidence (0.65 default), finger-gesture hold duration (600 ms), vote window (8 frames), namaste distance ratio (0.35), question/prayer/blessing timers, idle reset, question and slogan data, sound, leaderboard visibility/reset, and recent sessions/timeouts. Namaste uses a separate fast confirmation window so the blessing appears as soon as joined hands are detected.
+The admin panel at `/admin` edits confidence (0.65 default), finger-gesture hold duration (600 ms), vote window (8 frames), namaste distance ratio (0.35), question/prayer/blessing timers, idle reset, question and slogan data, sound, leaderboard visibility/reset, and recent sessions/timeouts. Namaste uses a separate fast confirmation window and a tolerant fingertip-alignment check, so the full-screen blessing appears promptly when joined hands are detected. The blessing layout scales to the viewport without nested vertical scrolling.
 
 ## Run tests
 

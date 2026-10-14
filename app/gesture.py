@@ -62,16 +62,16 @@ def namaste_detected(hands: list[list[tuple[float, float]]], threshold: float = 
         return False
     left, right = hands[:2]
     hand_sizes = [distance(hand[0], hand[9]) for hand in (left, right)]
-    hand_size = min(hand_sizes)
+    hand_size = sum(hand_sizes) / len(hand_sizes)
     if hand_size <= 0:
         return False
     close_fingertips = sum(
-        distance(left[tip], right[tip]) < threshold * hand_size
+        distance(left[tip], right[tip]) < (threshold + 0.3) * hand_size
         for tip in (8, 12, 16, 20)
     )
     palm_center_close = distance(left[9], right[9]) < (threshold + 0.5) * hand_size
     wrists_reasonably_close = distance(left[0], right[0]) < 1.75 * hand_size
-    return close_fingertips >= 3 and palm_center_close and wrists_reasonably_close
+    return close_fingertips >= 2 and palm_center_close and wrists_reasonably_close
 
 
 @dataclass

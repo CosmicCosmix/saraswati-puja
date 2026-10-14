@@ -82,6 +82,24 @@ def test_namaste_requires_two_close_upward_hands():
     assert not namaste_detected([left, far_hand])
 
 
+def test_namaste_tolerates_misaligned_fingertips_when_palms_are_joined():
+    left = [(0.42, 0.75)] * 21
+    right = [(0.58, 0.75)] * 21
+    for hand, x in ((left, 0.42), (right, 0.58)):
+        hand[5] = (x - 0.04, 0.58)
+        hand[9] = (x, 0.55)
+        hand[13] = (x + 0.02, 0.57)
+        hand[17] = (x + 0.04, 0.59)
+        hand[8] = (0.49, 0.31)
+        hand[12] = (0.50, 0.29)
+        hand[16] = (0.51, 0.30)
+        hand[20] = (0.52, 0.33)
+    right[8] = (right[8][0] + 0.08, right[8][1])
+    right[12] = (right[12][0] + 0.08, right[12][1])
+
+    assert namaste_detected([left, right])
+
+
 def test_namaste_lock_confirms_faster_without_changing_finger_gesture_timing():
     worker = CameraWorker(lambda *_args, **_kwargs: None, enabled=False)
     worker.configure({
