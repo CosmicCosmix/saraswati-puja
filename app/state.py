@@ -30,7 +30,8 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "sound_enabled": True,
 }
 DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
-POST_QUIZ_PRAYER_SECONDS = 10
+POST_QUIZ_ROUTE_DELAY_SECONDS = 5
+POST_QUIZ_PRAYER_SECONDS = 5
 
 
 class QuizState:
@@ -62,6 +63,7 @@ class QuizState:
         self._question_changed = None
         self._gesture_reset = None
         self._gesture_pipeline = None
+        self._gesture_pipeline_enabled = True
         self._namaste_reset = None
         self._timers_paused_at: float | None = None
         self._leaderboard: list[dict[str, Any]] = []
@@ -188,6 +190,11 @@ class QuizState:
 
     def set_gesture_pipeline(self, callback) -> None:
         self._gesture_pipeline = callback
+
+    def _set_gesture_pipeline_enabled(self, enabled: bool) -> None:
+        if self._gesture_pipeline and self._gesture_pipeline_enabled != enabled:
+            self._gesture_pipeline(enabled)
+        self._gesture_pipeline_enabled = enabled
 
     def set_namaste_reset(self, callback) -> None:
         self._namaste_reset = callback
@@ -346,7 +353,11 @@ class QuizState:
             answer = self.answers[-1]
         self.state = "FEEDBACK"
         self.feedback_phase = "feedback"
-        self.feedback_deadline = time.monotonic() + 4
+        is_final_question = bool(self.questions and self.question_index == len(self.questions) - 1)
+        feedback_seconds = POST_QUIZ_ROUTE_DELAY_SECONDS if is_final_question else 4
+        self.feedback_deadline = time.monotonic() + feedback_seconds
+        if is_final_question:
+            self._set_gesture_pipeline_enabled(False)
         correct = bool(answer["correct"])
         self.payload.update({
             "feedback_phase": "feedback",
@@ -391,12 +402,13 @@ class QuizState:
             self._namaste_reset()
         if self._gesture_reset:
             self._gesture_reset()
-        if self._gesture_pipeline:
-            self._gesture_pipeline(False)
+        self._set_gesture_pipeline_enabled(False)
         self.state = "PRAYER"
         self.payload = {
             "name": self.player,
             "prompt": "Join your hands in prayer. A blessing will appear shortly.",
+            "seconds": POST_QUIZ_PRAYER_SECONDS,
+            "ends_at": time.time() + POST_QUIZ_PRAYER_SECONDS,
         }
         self.deadline = (time.monotonic() if now is None else now) + POST_QUIZ_PRAYER_SECONDS
         self.feedback_deadline = None
@@ -424,8 +436,7 @@ class QuizState:
         with self._lock:
             if self._gesture_reset:
                 self._gesture_reset()
-            if self._gesture_pipeline:
-                self._gesture_pipeline(True)
+            self._set_gesture_pipeline_enabled(True)
             self.state = "NAME"
             self.timers_paused = False
             self.payload = {"prompt": "Please say your name"}

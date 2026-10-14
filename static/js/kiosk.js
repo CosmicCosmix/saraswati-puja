@@ -282,6 +282,10 @@
 
   function render(state) {
     const {state: mode, payload = {}, gesture = {}} = state;
+    if (mode === "PRAYER" && location.pathname !== "/postkiosk.html") {
+      location.replace("/postkiosk.html");
+      return;
+    }
     const previousSnapshot = currentSnapshot;
     currentSnapshot = state;
     const showBlessing = mode === "BLESSING";

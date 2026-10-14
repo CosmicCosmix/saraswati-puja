@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fff9f6">
+  <title>Saraswati Puja | Prayer</title>
+  <link rel="stylesheet" href="/static/css/postkiosk.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="university-header">
+    <div class="university-logo" aria-label="SRM Institute of Science and Technology">
+      <span class="logo-placeholder" aria-hidden="true">✺</span>
+      <span class="university-name"><small>CHENNAI RAMAPURAM</small><strong>SRM</strong><span>Institute of Science and Technology</span></span>
+    </div>
+  </header>
+  <main class="page-container">
+    <section id="prayer-view" class="prayer-card" aria-live="polite" hidden>
+      <span class="lotus" aria-hidden="true">❀</span>
+      <p class="eyebrow">SARASWATI PUJA • A MOMENT OF PEACE</p>
+      <div id="prayer-countdown" class="countdown-ring" aria-label="Blessing countdown"><span>5</span></div>
+      <h1>Join your hands</h1>
+      <p id="prayer-prompt" class="prayer-prompt">Bring your hands together and take a quiet moment for prayer.</p>
+      <p class="devotee">For <strong id="prayer-name"></strong></p>
+    </section>
+    <section id="blessing-screen" class="blessing-screen" aria-live="polite" aria-label="Goddess blessing" hidden>
+      <img id="blessing-art" class="blessing-art" alt="">
+      <div class="blessing-copy">
+        <p class="eyebrow">A BLESSING FOR YOU</p>
+        <h1 id="blessing-title"></h1>
+        <p id="blessing-quote" class="blessing-quote"></p>
+        <p id="blessing-recipient" class="devotee"></p>
+      </div>
+    </section>
+    <p id="connection-status" class="connection-status" role="status">Connecting to the prayer experience…</p>
+  </main>
+  <audio id="blessing-music" src="/static/audio/blessing.mp3" preload="none" loop></audio>
+  <script src="/static/js/postkiosk.js"></script>
+</body>
+</html>

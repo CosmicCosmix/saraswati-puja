@@ -80,6 +80,11 @@ async def kiosk(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "kiosk.html", {"simulate": bool(state and state.simulate)})
 
 
+@app.get("/postkiosk.html", response_class=HTMLResponse)
+async def post_kiosk(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(request, "postkiosk.html", {})
+
+
 @app.get("/display", response_class=HTMLResponse)
 async def display(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(request, "display.html", {})
