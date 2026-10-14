@@ -1,0 +1,38 @@
+[
+  {
+    "id": "shailaputri",
+    "name": "Shailaputri",
+    "image": "/images/Form%201.png",
+    "quote": "May Shailaputri's steadfastness keep your spirit grounded and strong."
+  },
+  {
+    "id": "skandamata",
+    "name": "Skandamata",
+    "image": "/images/form%202.png",
+    "quote": "May Skandamata's loving care bring peace, courage, and joy."
+  },
+  {
+    "id": "siddhidatri",
+    "name": "Siddhidatri",
+    "image": "/images/form%209.png",
+    "quote": "May Siddhidatri's grace bring harmony, insight, and fulfillment."
+  },
+  {
+    "id": "katyayani",
+    "name": "Katyayani",
+    "image": "/images/form%206.png",
+    "quote": "May Katyayani's fearless strength guide you to stand for what is right."
+  },
+  {
+    "id": "kalaratri",
+    "name": "Kalaratri",
+    "image": "/images/form%207.png",
+    "quote": "May Kalaratri's fierce protection dispel fear and light your way."
+  },
+  {
+    "id": "brahmacharini",
+    "name": "Brahmacharini",
+    "image": "/images/form%208.png",
+    "quote": "May Brahmacharini's devotion and discipline lead you toward wisdom."
+  }
+]

@@ -40,6 +40,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Saraswati Puja Gesture Quiz", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+app.mount("/images", StaticFiles(directory=ROOT / "images"), name="images")
 templates = Jinja2Templates(directory=ROOT / "templates")
 security = HTTPBasic()
 

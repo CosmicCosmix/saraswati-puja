@@ -4,6 +4,7 @@ import time
 
 import pytest
 
+from app.content import load_json
 from app.models import AppSetting, QuizSession
 from app.state import QuizState
 
@@ -34,10 +35,29 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     state.handle_gesture("namaste")
     assert state.state == "BLESSING"
     assert state.payload["name"] == "Test Visitor"
-    assert state.payload["image"].startswith("/goddess/")
-    assert state.payload["slogan"]
+    assert state.payload["image"].startswith("/images/")
+    assert state.payload["goddess"]
+    goddess = next(entry for entry in load_json("goddesses.json") if entry["name"] == state.payload["goddess"])
+    assert state.payload["image"] == goddess["image"]
+    assert state.payload["slogan"] == goddess["quote"]
     state.tick(state.deadline + 0.01)
     assert state.state == "NAME"
+
+
+def test_namaste_keeps_blessing_unchanged_until_a_new_prayer(isolated_db):
+    state = QuizState(simulate=True)
+    state.player = "Test Visitor"
+    state.state = "PRAYER"
+
+    state.handle_gesture("namaste")
+    first_blessing = dict(state.payload)
+
+    state.handle_gesture("namaste", locked=False)
+    assert state.payload == first_blessing
+
+    state.handle_gesture("count", count=None, locked=False)
+    state.handle_gesture("namaste")
+    assert state.payload["goddess"] != first_blessing["goddess"]
 
 
 def test_prayer_entry_rearms_namaste_detection(isolated_db):

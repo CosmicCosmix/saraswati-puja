@@ -76,41 +76,11 @@
             color: #163e75;
         }
 
-        .logo-placeholder {
-            width: 49px;
-            height: 49px;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            border: 2px solid #c5a85e;
-            border-radius: 50%;
-            color: #16467b;
-            background: #fffdf7;
-            font-size: 25px;
-        }
-
-        .university-name {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            line-height: 1.12;
-        }
-
-        .university-name small {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: .45px;
-        }
-
-        .university-name strong {
-            font-family: Georgia, serif;
-            font-size: 27px;
-            letter-spacing: -1px;
-        }
-
-        .university-name span {
-            font-size: 8px;
-            color: #625e5a;
+        .university-logo img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 125px;
         }
 
         /* Main page */
@@ -868,14 +838,8 @@
                 padding: 7px 17px;
             }
 
-            .logo-placeholder {
-                width: 41px;
-                height: 41px;
-                font-size: 21px;
-            }
-
-            .university-name strong {
-                font-size: 23px;
+            .university-logo img {
+                max-width: 105px;
             }
 
             .page-container {
@@ -1128,12 +1092,7 @@
     <!-- UNIVERSITY BRANDING -->
     <header class="university-header">
         <a class="university-logo" href="#top" aria-label="SRM Institute of Science and Technology">
-            <div class="logo-placeholder" aria-hidden="true">✺</div>
-            <div class="university-name">
-                <small>CHENNAI RAMAPURAM</small>
-                <strong>SRM</strong>
-                <span>Institute of Science and Technology</span>
-            </div>
+            <img src="/images/SRM%20LOGO.png" alt="SRM Institute of Science and Technology">
         </a>
     </header>
 

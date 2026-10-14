@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy import select
 
-from app.content import BlessingPicker, GODDESSES, load_json
+from app.content import BlessingPicker, load_json
 from app.db import SessionLocal
 from app.models import AppSetting, BlessingLog, GestureTimeout, QuizSession
 from app.scoring import leaderboard_order, score_answer
@@ -94,8 +94,7 @@ class QuizState:
         with SessionLocal() as db:
             history = db.scalars(select(BlessingLog).order_by(BlessingLog.id.desc()).limit(10)).all()
         self.blessing_picker = BlessingPicker(
-            [row.goddess for row in history[:3]],
-            [row.slogan_id for row in history],
+            [row.goddess for row in history[:1]],
         )
 
     def _publish(self) -> None:
@@ -230,7 +229,7 @@ class QuizState:
                 elif self.state == "QUESTION" and locked and count in (1, 2, 3, 4):
                     self._select_answer(count - 1)
             elif event == "namaste" and locked:
-                if self.state == "PRAYER":
+                if self.state in {"PRAYER", "BLESSING"}:
                     self._reveal_blessing()
             if locked and ((event == "namaste") or (event == "count" and count in (1, 2, 3, 4, 5))):
                 self.last_activity = now
@@ -389,17 +388,16 @@ class QuizState:
         self._publish()
 
     def _reveal_blessing(self) -> None:
-        if self.state != "PRAYER":
+        if self.state not in {"PRAYER", "BLESSING"}:
             return
-        goddess, slogan = self.blessing_picker.pick(load_json("slogans.json"))
-        image_file = next(filename for filename, label in GODDESSES if label == goddess)
+        goddess = self.blessing_picker.pick(load_json("goddesses.json"))
         with SessionLocal() as db:
-            db.add(BlessingLog(player_name=self.player, goddess=goddess, slogan_id=slogan["id"]))
+            db.add(BlessingLog(player_name=self.player, goddess=goddess["name"], slogan_id=goddess["id"]))
             db.commit()
         self.state = "BLESSING"
         self.payload = {
-            "name": self.player, "goddess": goddess, "image": f"/goddess/{image_file}",
-            "slogan": slogan["text"], "prompt": f"Blessings, {self.player}",
+            "name": self.player, "goddess": goddess["name"], "image": goddess["image"],
+            "slogan": goddess["quote"], "prompt": f"Blessings, {self.player}",
         }
         self.deadline = time.monotonic() + float(self.settings["blessing_seconds"])
         self.last_activity = time.monotonic()
