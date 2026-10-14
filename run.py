@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import sys
+from pathlib import Path
 
 import uvicorn
 
@@ -10,6 +12,17 @@ from app.db import initialize_database
 from app.gesture import CameraWorker
 from app.main import app, configure_runtime
 from app.state import QuizState
+
+
+def _restart_with_camera_python(simulate: bool) -> None:
+    if simulate or sys.version_info[:2] == (3, 11):
+        return
+
+    project_root = Path(__file__).resolve().parent
+    python_path = project_root / ".venv311" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    if python_path.is_file():
+        executable = str(python_path)
+        os.execv(executable, [executable, str(Path(__file__).resolve()), *sys.argv[1:]])
 
 
 def main() -> None:
@@ -21,6 +34,7 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    _restart_with_camera_python(args.simulate)
     initialize_database()
     state = QuizState(simulate=args.simulate)
     camera = CameraWorker(state.handle_gesture, enabled=not args.simulate, device=args.camera_device)

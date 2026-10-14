@@ -12,14 +12,15 @@ A local, hands-free quiz kiosk for the nine Navadurga forms. FastAPI serves the 
 
 ```powershell
 py -3.11 -m venv .venv311
-.\.venv311\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+.\.venv311\Scripts\python.exe -m pip install --upgrade pip
+.\.venv311\Scripts\python.exe -m pip install -r requirements.txt
 $env:ADMIN_PASSWORD = "choose-a-local-volunteer-password"
-python run.py
+.\.venv311\Scripts\python.exe run.py
 ```
 
 Open `http://localhost:8000/kiosk` on the camera computer and `http://localhost:8000/display` on a second display. The server binds to `0.0.0.0:8000`; keep it on a trusted local network. The admin page at `/admin` uses HTTP Basic authentication and is disabled until `ADMIN_PASSWORD` is set. If the computer has multiple cameras, set `$env:CAMERA_DEVICE = "1"` before starting the app, or pass `--camera-device 1`.
+
+When started with another Python version, `run.py` automatically restarts under the compatible `.venv311` environment if it exists.
 
 For a phone or tablet on the same network, open `http://<host-computer-LAN-IP>:8000/kiosk`. The responsive page runs on mobile, but hand tracking and spoken-name capture use the webcam and microphone attached to the computer running the server; the phone's own camera and microphone are not used.
 

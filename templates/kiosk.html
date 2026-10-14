@@ -1,28 +1,1272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Saraswati Puja Quiz</title>
-  <link rel="stylesheet" href="/static/css/kiosk.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#fff9f6">
+
+    <title>Saraswati Puja Quiz | Navadurga</title>
+
+    <link rel="stylesheet" href="/static/css/kiosk.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #fff9f6;
+            --white: #ffffff;
+            --cream: #fcf0e9;
+            --cream-dark: #f4e2d9;
+            --maroon: #82172d;
+            --maroon-dark: #570b20;
+            --gold: #a56820;
+            --gold-light: #f4dba1;
+            --text: #35242a;
+            --muted: #76676a;
+            --border: #f0e5df;
+            --shadow: 0 3px 6px rgba(65, 28, 28, .07),
+                      0 12px 28px rgba(65, 28, 28, .035);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "DM Sans", sans-serif;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, input, textarea, select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        /* University header */
+
+        .university-header {
+            height: 73px;
+            display: flex;
+            align-items: center;
+            padding: 8px max(28px, calc((100vw - 1510px) / 2));
+            background: #fff;
+            border-bottom: 1px solid #eadfd9;
+            box-shadow: 0 1px 3px rgba(50, 20, 20, .04);
+        }
+
+        .university-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #163e75;
+        }
+
+        .logo-placeholder {
+            width: 49px;
+            height: 49px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            border: 2px solid #c5a85e;
+            border-radius: 50%;
+            color: #16467b;
+            background: #fffdf7;
+            font-size: 25px;
+        }
+
+        .university-name {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            line-height: 1.12;
+        }
+
+        .university-name small {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .45px;
+        }
+
+        .university-name strong {
+            font-family: Georgia, serif;
+            font-size: 27px;
+            letter-spacing: -1px;
+        }
+
+        .university-name span {
+            font-size: 8px;
+            color: #625e5a;
+        }
+
+        /* Main page */
+
+        .page-container {
+            width: min(1510px, 100%);
+            margin: 0 auto;
+            padding: 24px 28px 0;
+        }
+
+        /* Top instruction banner */
+
+        .instruction-banner {
+            min-height: 92px;
+            padding: 20px 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            background: #fcf0e9;
+            border: 1px solid #f9e9e0;
+            border-radius: 20px;
+            margin-bottom: 22px;
+        }
+
+        .banner-left {
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            min-width: 0;
+        }
+
+        .banner-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            font-size: 26px;
+        }
+
+        .banner-copy h2 {
+            margin: 0 0 5px;
+            color: var(--maroon-dark);
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(18px, 2vw, 23px);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .banner-copy p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .mode-badge {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 15px;
+            border-radius: 30px;
+            background: #efe2da;
+            color: #674325;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .3px;
+        }
+
+        .mode-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #efb36e;
+        }
+
+        /* Two-column dashboard */
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: minmax(0, 1.42fr) minmax(0, 1fr);
+            align-items: start;
+            gap: 22px;
+        }
+
+        .left-column,
+        .right-column {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .panel {
+            min-width: 0;
+            overflow: hidden;
+            background: var(--white);
+            border: 1px solid #f2eae5;
+            border-radius: 19px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Audio calibration panel */
+
+        .audio-panel {
+            min-height: 628px;
+            padding: 32px clamp(22px, 4vw, 48px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background:
+                radial-gradient(ellipse at 50% 22%, #fffaf7 0%, #fff 58%);
+        }
+
+        .section-kicker {
+            margin: 0;
+            color: #966426;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        .audio-kicker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+        }
+
+        .mic-orb {
+            width: 138px;
+            height: 138px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            margin-top: 28px;
+            border-radius: 50%;
+            border: 11px solid #f6e8c9;
+            outline: 1px solid #f8f0df;
+            background: #faeeea;
+            color: var(--maroon);
+            box-shadow:
+                0 0 0 9px rgba(247, 231, 195, .27),
+                0 0 28px rgba(227, 185, 100, .18);
+        }
+
+        .mic-orb svg {
+            width: 42px;
+            height: 42px;
+        }
+
+        .mic-orb.listening {
+            border-color: #ccebd7;
+            background: #eaf7ee;
+            color: #237748;
+            box-shadow: 0 0 0 9px rgba(95, 184, 123, .12);
+        }
+
+        .mic-caption {
+            margin-top: 6px;
+            color: #6c5957;
+            font-size: 12px;
+        }
+
+        .audio-panel h2 {
+            margin: 27px 0 7px;
+            color: var(--maroon-dark);
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(26px, 3.2vw, 37px);
+            line-height: 1.25;
+            font-weight: 600;
+        }
+
+        .audio-description {
+            max-width: 410px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.75;
+        }
+
+        .primary-button {
+            width: min(100%, 385px);
+            min-height: 49px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 11px;
+            margin-top: 27px;
+            padding: 13px 19px;
+            border: 1px solid #781328;
+            border-radius: 12px;
+            background: var(--maroon);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 3px 5px rgba(100, 10, 35, .12);
+            transition: background .2s, transform .2s, box-shadow .2s;
+        }
+
+        .primary-button:hover {
+            background: #681025;
+            transform: translateY(-1px);
+            box-shadow: 0 7px 15px rgba(100, 10, 35, .15);
+        }
+
+        .primary-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .privacy-note {
+            max-width: 400px;
+            margin: 14px 0 0;
+            color: #786a6a;
+            font-size: 13px;
+            line-height: 1.75;
+        }
+
+        .divider-label {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 32px;
+            color: #796c6a;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .3px;
+        }
+
+        .divider-label::before,
+        .divider-label::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: #eaded8;
+        }
+
+        .name-entry {
+            width: 100%;
+            max-width: 580px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            margin-top: 17px;
+        }
+
+        .name-input-wrap {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: #fcf0e9;
+            transition: border-color .2s;
+        }
+
+        .name-input-wrap:focus-within {
+            border-color: #d5a8a5;
+        }
+
+        .name-input-wrap svg {
+            flex-shrink: 0;
+            color: #76605c;
+        }
+
+        .name-input-wrap input {
+            width: 100%;
+            min-width: 0;
+            height: 46px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .name-input-wrap input::placeholder {
+            color: #786d69;
+        }
+
+        .continue-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 46px;
+            padding: 0 21px;
+            border: 1px solid #eadbd4;
+            border-radius: 12px;
+            background: #f0e3dd;
+            color: var(--maroon-dark);
+            font-weight: 700;
+            white-space: nowrap;
+            transition: background .2s;
+        }
+
+        .continue-button:hover {
+            background: #e9d3ca;
+        }
+
+        /* Right-hand camera panel */
+
+        .camera-panel {
+            padding: 24px;
+        }
+
+        .camera-topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 11px;
+            border-radius: 30px;
+            background: #f8ece6;
+            color: #58413d;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .live-badge .mode-dot {
+            width: 7px;
+            height: 7px;
+            background: #bd9864;
+        }
+
+        .camera-panel h2 {
+            margin: 6px 0 18px;
+            color: var(--maroon-dark);
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(19px, 2vw, 23px);
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .camera-frame {
+            position: relative;
+            isolation: isolate;
+            width: 100%;
+            aspect-ratio: 1.12 / 1;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            border: 1px solid #eadbd5;
+            border-radius: 14px;
+            background: #ebdfda;
+        }
+
+        .camera-frame::before {
+            content: "";
+            position: absolute;
+            inset: 12px;
+            z-index: 2;
+            border: 1px solid rgba(255, 255, 255, .17);
+            border-radius: 9px;
+            pointer-events: none;
+        }
+
+        .camera-frame img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            z-index: 0;
+        }
+
+        .camera-frame img:not([src]),
+        .camera-frame img[src=""] {
+            display: none;
+        }
+
+        .camera-ring {
+            position: absolute;
+            top: 46%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 43%;
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            border: none;
+            border-radius: 0;
+            background:
+                linear-gradient(#92561b, #92561b) left top / 16px 2px no-repeat,
+                linear-gradient(#92561b, #92561b) left top / 2px 16px no-repeat,
+                linear-gradient(#92561b, #92561b) right top / 16px 2px no-repeat,
+                linear-gradient(#92561b, #92561b) right top / 2px 16px no-repeat,
+                linear-gradient(#92561b, #92561b) left bottom / 16px 2px no-repeat,
+                linear-gradient(#92561b, #92561b) left bottom / 2px 16px no-repeat,
+                linear-gradient(#92561b, #92561b) right bottom / 16px 2px no-repeat,
+                linear-gradient(#92561b, #92561b) right bottom / 2px 16px no-repeat;
+            background-color: transparent;
+            box-shadow: none;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .camera-ring span {
+            color: #b18185;
+            font-size: 48px;
+            filter: none;
+        }
+
+        .camera-guidance {
+            position: absolute;
+            z-index: 4;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            min-height: 43px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .94);
+            color: var(--text);
+            font-size: 11px;
+        }
+
+        .guide-instruction {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guide-instruction span {
+            color: #966426;
+            font-size: 17px;
+        }
+
+        .confidence {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #796b48;
+            white-space: nowrap;
+        }
+
+        .confidence-track {
+            width: 65px;
+            height: 7px;
+            overflow: hidden;
+            border-radius: 9px;
+            background: #f1e9df;
+        }
+
+        .confidence-fill {
+            width: 75%;
+            height: 100%;
+            border-radius: inherit;
+            background: #98601e;
+        }
+
+        /* Gesture guide */
+
+        .gesture-panel {
+            padding: 17px;
+            background: #fcf0e9;
+            border: 1px solid #fae8df;
+            border-radius: 15px;
+        }
+
+        .gesture-panel h3 {
+            margin: 0 0 12px;
+            color: var(--maroon-dark);
+            font-size: 11px;
+            letter-spacing: .6px;
+        }
+
+        .gesture-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+        }
+
+        .gesture-item {
+            min-width: 0;
+            min-height: 43px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 10px;
+            background: #fff;
+            color: #463536;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .gesture-number {
+            width: 25px;
+            height: 25px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            background: #f7e9e3;
+            color: var(--maroon-dark);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .gesture-emoji {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        /* Privacy / settings row */
+
+        .camera-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 17px;
+            color: #76676a;
+            font-size: 11px;
+        }
+
+        .privacy-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .privacy-indicator span {
+            color: #898449;
+            font-size: 17px;
+        }
+
+        .settings-link {
+            color: #87652f;
+            text-decoration: none;
+        }
+
+        .settings-link:hover {
+            color: var(--maroon);
+            text-decoration: underline;
+        }
+
+        /* Existing content fallback and quiz components */
+
+        .content {
+            width: 100%;
+            overflow-wrap: anywhere;
+            color: var(--text);
+            line-height: 1.75;
+        }
+
+        .content h2,
+        .content h3 {
+            color: var(--maroon-dark);
+            font-family: "Playfair Display", Georgia, serif;
+        }
+
+        .content button {
+            padding: 11px 17px;
+            border: 1px solid #e6d5cd;
+            border-radius: 10px;
+            background: var(--cream);
+            color: var(--maroon-dark);
+            font-weight: 600;
+        }
+
+        .content button:hover {
+            background: #f2ded4;
+        }
+
+        .content input,
+        .content select,
+        .content textarea {
+            max-width: 100%;
+            padding: 10px;
+            border: 1px solid #e9dcd5;
+            border-radius: 9px;
+            background: #fffaf7;
+            color: var(--text);
+        }
+
+        .content a {
+            color: var(--maroon);
+        }
+
+        /* Gold preview / celebration banner */
+
+        .celebration-banner {
+            position: relative;
+            min-height: 72px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            padding: 13px 18px;
+            border: 1px solid #e9c878;
+            border-radius: 13px;
+            background:
+                radial-gradient(ellipse at 85% 0%, rgba(255,255,255,.65), transparent 35%),
+                linear-gradient(105deg, #edc56c, #ffdf97 55%, #f4d18b);
+            color: #59321b;
+        }
+
+        .celebration-banner small {
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: .8px;
+        }
+
+        .celebration-banner strong {
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: 17px;
+        }
+
+        /* Footer strips */
+
+        .main-footer {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-top: 24px;
+            padding: 15px 20px;
+            border: 1px solid #f6e8df;
+            border-radius: 18px;
+            background: #fcf0e9;
+        }
+
+        .footer-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: #49393a;
+            font-size: 14px;
+        }
+
+        .footer-hand {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #f9dfcd;
+            color: #79512c;
+            font-size: 20px;
+        }
+
+        .footer-star {
+            color: #a56820;
+        }
+
+        .footer-series {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #776264;
+            font-size: 10px;
+        }
+
+        .back-to-top {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 50%;
+            background: #f6e8e1;
+            color: #65463e;
+            text-decoration: none;
+            font-size: 19px;
+        }
+
+        .legal-footer {
+            min-height: 39px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px max(20px, calc((100vw - 1510px) / 2));
+            margin-top: 22px;
+            background: #f7eee9;
+            color: #716264;
+            font-size: 10px;
+        }
+
+        .legal-footer span {
+            line-height: 1.6;
+        }
+
+        /* Accessibility */
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 3px solid #d5a452;
+            outline-offset: 3px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+
+        /* Laptop / tablet */
+
+        @media (max-width: 1000px) {
+            .page-container {
+                padding: 20px 20px 0;
+            }
+
+            .dashboard {
+                grid-template-columns: minmax(0, 1fr) minmax(0, .9fr);
+                gap: 16px;
+            }
+
+            .left-column,
+            .right-column {
+                gap: 16px;
+            }
+
+            .audio-panel {
+                padding: 28px 20px;
+                min-height: 600px;
+            }
+
+            .camera-panel {
+                padding: 18px;
+            }
+
+            .gesture-item {
+                padding: 8px;
+                gap: 7px;
+            }
+
+            .main-footer {
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .university-header {
+                height: 62px;
+                padding: 7px 17px;
+            }
+
+            .logo-placeholder {
+                width: 41px;
+                height: 41px;
+                font-size: 21px;
+            }
+
+            .university-name strong {
+                font-size: 23px;
+            }
+
+            .page-container {
+                padding: 16px 13px 0;
+            }
+
+            .instruction-banner {
+                align-items: flex-start;
+                padding: 18px 15px;
+                gap: 12px;
+                border-radius: 15px;
+            }
+
+            .banner-left {
+                gap: 10px;
+            }
+
+            .banner-copy h2 {
+                font-size: 18px;
+            }
+
+            .banner-copy p {
+                line-height: 1.6;
+            }
+
+            .mode-badge {
+                padding: 7px 9px;
+                font-size: 9px;
+            }
+
+            .dashboard {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 17px;
+            }
+
+            .left-column,
+            .right-column {
+                gap: 17px;
+            }
+
+            .audio-panel {
+                min-height: 600px;
+                padding: 29px 20px 25px;
+            }
+
+            .mic-orb {
+                width: 120px;
+                height: 120px;
+            }
+
+            .audio-panel h2 {
+                font-size: 29px;
+            }
+
+            .camera-frame {
+                aspect-ratio: 1.2 / 1;
+            }
+
+            .main-footer {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 17px;
+            }
+
+            .footer-series {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .legal-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 15px;
+                margin-top: 15px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .instruction-banner {
+                flex-direction: column;
+            }
+
+            .mode-badge {
+                margin-left: 47px;
+            }
+
+            .name-entry {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .continue-button {
+                width: 100%;
+            }
+
+            .gesture-grid {
+                gap: 7px;
+            }
+
+            .gesture-item {
+                font-size: 10px;
+            }
+
+            .camera-bottom {
+                align-items: flex-start;
+            }
+
+            .confidence-track {
+                width: 42px;
+            }
+
+            .footer-message {
+                font-size: 12px;
+            }
+        }
+    </style>
 </head>
-<body>
-  <main class="kiosk-shell">
-    <header class="masthead"><div class="lotus" aria-hidden="true">❀</div><div><p class="eyebrow">NAVADURGA • NAVRATRI</p><h1>Saraswati Puja Quiz</h1></div><div class="lotus lotus-right" aria-hidden="true">❀</div></header>
-    <section class="stage">
-      <div class="camera-card">
-        <div class="camera-heading"><span>YOUR HAND ZONE</span><span class="camera-status" id="camera-status" role="status">Starting camera…</span></div>
-        <div class="camera-frame"><img src="/video" alt="Mirrored live camera preview with hand landmarks and hand-zone guide"><div class="camera-ring" id="gesture-ring"><span id="gesture-count">✋</span></div></div>
-        <p class="coach" id="coach">Stand in front of the camera</p>
-      </div>
-      <div class="message-card" id="message-card" aria-live="polite">
-        <p class="eyebrow" id="state-label">WELCOME</p>
-        <div id="content" class="content"></div>
-      </div>
-    </section>
-    <footer><span>Show your hands in the frame</span><span class="divider">✦</span><span>Hands-free • Joyful • Learn together</span></footer>
-  </main>
-  <script>window.KIOSK_SIMULATE = {{ "true" if simulate else "false" }};</script>
-  <script src="/static/js/kiosk.js"></script>
+
+<body id="top">
+
+    <!-- UNIVERSITY BRANDING -->
+    <header class="university-header">
+        <a class="university-logo" href="#top" aria-label="SRM Institute of Science and Technology">
+            <div class="logo-placeholder" aria-hidden="true">✺</div>
+            <div class="university-name">
+                <small>CHENNAI RAMAPURAM</small>
+                <strong>SRM</strong>
+                <span>Institute of Science and Technology</span>
+            </div>
+        </a>
+    </header>
+
+    <main class="page-container">
+
+        <!-- CALIBRATION STATUS -->
+        <section class="instruction-banner">
+            <div class="banner-left">
+                <div class="banner-icon" aria-hidden="true">👋</div>
+                <div class="banner-copy">
+
+                    <p id="banner-subtitle">
+                        Step 1 of 4 • Voice & Gesture Calibration for Navadurga Quiz
+                    </p>
+                </div>
+            </div>
+
+            <div class="mode-badge">
+                <span class="mode-dot"></span>
+                <span id="mode-label">CALIBRATION MODE</span>
+            </div>
+        </section>
+
+        <section class="dashboard">
+
+            <!-- LEFT COLUMN -->
+            <div class="left-column">
+
+                <!-- AUDIO IDENTIFICATION -->
+                <section class="panel audio-panel">
+
+                    <p class="section-kicker audio-kicker">
+                        <span aria-hidden="true">♧</span>
+                        AUDIO IDENTIFICATION
+                    </p>
+
+                    <div class="mic-orb" id="mic-orb" aria-label="Microphone status">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                            <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
+                            <path d="M12 19v3"></path>
+                            <path d="M8 22h8"></path>
+                            <path d="M3 3l18 18"></path>
+                        </svg>
+                    </div>
+
+                    <span class="mic-caption" id="mic-caption">Off</span>
+
+                    <h2 id="audio-title">Please say your name</h2>
+
+                    <p class="audio-description" id="audio-description">
+                        The microphone is off. Enable it to say your name.
+                    </p>
+
+                    <button type="button" class="primary-button" id="mic-button">
+                        <svg viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round"
+                             aria-hidden="true">
+                            <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                            <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
+                            <path d="M12 19v3"></path>
+                            <path d="M8 22h8"></path>
+                        </svg>
+                        Enable microphone &amp; say your name
+                    </button>
+
+                    <p class="privacy-note">
+                        Allow microphone access, then say your name.
+                        Speech recognition may use your browser's online speech service.
+                    </p>
+
+                    <!-- The original quiz content remains functional -->
+                    <div class="divider-label">
+                        OR TYPE YOUR NAME BELOW
+                    </div>
+
+                    <form class="name-entry" id="name-form">
+                        <label class="name-input-wrap" for="name-input">
+                            <svg width="19" height="19" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor"
+                                 stroke-width="1.8" stroke-linecap="round"
+                                 stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                                <path d="M8 3v4M16 3v4M7 11h2M7 15h2M13 11h4M13 15h4"></path>
+                            </svg>
+                            <input
+                                type="text"
+                                id="name-input"
+                                name="name"
+                                placeholder="e.g. Priyanshu Sharma"
+                                autocomplete="name"
+                            >
+                        </label>
+
+                        <button type="submit" class="continue-button" id="continue-button">
+                            Continue <span aria-hidden="true">→</span>
+                        </button>
+                    </form>
+
+                    <!-- Original content hook retained -->
+                    <div id="message-card" hidden aria-live="polite">
+                        <p class="eyebrow" id="state-label">WELCOME</p>
+                        <div id="content" class="content"></div>
+                    </div>
+
+                </section>
+
+                <!-- OPTIONAL FESTIVAL BRANDING PANEL -->
+                <section class="celebration-banner" aria-label="Festival information">
+                    <small>NAVADURGA • SARASWATI PUJA</small>
+                    <strong>Saraswati Puja Quiz</strong>
+                    <small>CELEBRATING WISDOM, LEARNING &amp; CULTURE</small>
+                </section>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-column">
+
+                <!-- LIVE CAMERA -->
+                <section class="panel camera-panel">
+
+                    <div class="camera-topline">
+                        <p class="section-kicker">YOUR HAND ZONE</p>
+
+                        <span class="live-badge">
+                            <span class="mode-dot"></span>
+                            <span id="camera-status" role="status">Starting camera…</span>
+                        </span>
+                    </div>
+
+                    <h2>Camera Gestures Active</h2>
+
+                    <div class="camera-frame">
+
+                        <img
+                            src="/video"
+                            alt="Mirrored live camera preview with hand landmarks and hand-zone guide"
+                        >
+
+                        <!-- Original gesture hooks retained -->
+                        <div class="camera-ring" id="gesture-ring">
+                            <span id="gesture-count">✋</span>
+                        </div>
+
+                        <div class="camera-guidance">
+                            <div class="guide-instruction">
+                                <span aria-hidden="true">♧</span>
+                                <span id="coach">Show hand inside guide</span>
+                            </div>
+
+                            <div class="confidence">
+                                <span>Confidence</span>
+                                <div class="confidence-track" aria-hidden="true">
+                                    <div class="confidence-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- GESTURE INSTRUCTIONS -->
+                    <section class="gesture-panel" style="margin-top: 19px;">
+                        <h3>QUICK HAND CONTROLS</h3>
+
+                        <div class="gesture-grid">
+
+                            <div class="gesture-item">
+                                <span class="gesture-number">1</span>
+                                <span>Raise 1 finger to pick A</span>
+                            </div>
+
+                            <div class="gesture-item">
+                                <span class="gesture-number">2</span>
+                                <span>Raise 2 fingers for B</span>
+                            </div>
+
+                            <div class="gesture-item">
+                                <span class="gesture-emoji">✋</span>
+                                <span>Open palm confirms</span>
+                            </div>
+
+                            <div class="gesture-item">
+                                <span class="gesture-emoji">✊</span>
+                                <span>Closed fist repeats</span>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <div class="camera-bottom">
+                        <span class="privacy-indicator">
+                            <span aria-hidden="true">♙</span>
+                            Processed locally on your device
+                        </span>
+
+                        <a class="settings-link" href="#gesture-settings"
+                           id="gesture-settings-link">
+                            Gesture Settings
+                        </a>
+                    </div>
+
+                    <div id="gesture-settings" hidden>
+                        <!-- Add existing gesture settings here if available -->
+                    </div>
+
+                </section>
+
+                <section class="celebration-banner">
+                    <small>SARASWATI • KNOWLEDGE • WISDOM</small>
+                    <strong>Saraswati Puja Quiz</strong>
+                </section>
+
+            </div>
+
+        </section>
+
+        <!-- MAIN FOOTER -->
+        <footer class="main-footer">
+            <div class="footer-message">
+                <span class="footer-hand" aria-hidden="true">♧</span>
+                <span>Show your hands in the frame</span>
+                <span class="footer-star">✦</span>
+                <span>Hands-free • Joyful • Learn together</span>
+            </div>
+
+            <div class="footer-series">
+                <span>Saraswati Puja Interactive Series</span>
+                <a class="back-to-top" href="#top" aria-label="Back to top">↑</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <footer class="legal-footer">
+        <span>♧ &nbsp; Show your hands in frame • Hands-free • Joyful • Learn together</span>
+        <span>Navadurga Festivity Celebration &nbsp; • &nbsp; © 2025 Saraswati Puja Cultural Foundation. All rights reserved.</span>
+    </footer>
+
+    <!-- Preserve the existing server-side template flag -->
+    <script>
+        window.KIOSK_SIMULATE = {{ "true" if simulate else "false" }};
+    </script>
+
+    <!-- Preserve the original JavaScript entry point -->
+    <script src="/static/js/kiosk.js"></script>
+
 </body>
 </html>
