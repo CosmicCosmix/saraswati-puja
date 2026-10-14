@@ -30,6 +30,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "sound_enabled": True,
 }
 DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
+POST_QUIZ_BLESSING_DELAY_SECONDS = 5
 
 
 class QuizState:
@@ -52,6 +53,7 @@ class QuizState:
         self.selected_answer: int | None = None
         self.feedback_phase = ""
         self.feedback_deadline: float | None = None
+        self.post_quiz_blessing_deadline: float | None = None
         self.leaderboard_id: int | None = None
         self.player_rank: int | None = None
         self.previous_player_questions: set[str] = set()
@@ -141,6 +143,8 @@ class QuizState:
                     self.deadline += elapsed
                 if self.feedback_deadline is not None:
                     self.feedback_deadline += elapsed
+                if self.post_quiz_blessing_deadline is not None:
+                    self.post_quiz_blessing_deadline += elapsed
                 if self.state == "QUESTION":
                     self.answer_started += elapsed
                     self.payload["ends_at"] = float(self.payload["ends_at"]) + elapsed
@@ -158,7 +162,9 @@ class QuizState:
             if self.timers_paused:
                 return
             now = time.monotonic() if now is None else now
-            if self.state != "NAME" and now - self.last_activity >= self.settings["idle_seconds"]:
+            if self.post_quiz_blessing_deadline is not None and now >= self.post_quiz_blessing_deadline:
+                self._reveal_blessing(force=True)
+            elif self.state != "NAME" and now - self.last_activity >= self.settings["idle_seconds"]:
                 self._timeout("idle_reset")
                 self.reset()
             elif self.state == "QUESTION" and self.deadline is not None and now >= self.deadline:
@@ -229,9 +235,6 @@ class QuizState:
                         self._retry_name()
                 elif self.state == "QUESTION" and locked and count in (1, 2, 3, 4):
                     self._select_answer(count - 1)
-            elif event == "namaste":
-                if self.state == "PRAYER":
-                    self._reveal_blessing()
             if locked and ((event == "namaste") or (event == "count" and count in (1, 2, 3, 4, 5))):
                 self.last_activity = now
             self._publish()
@@ -337,9 +340,15 @@ class QuizState:
                   "seconds_left": seconds_left, "points": points}
         if not selection_only:
             self.answers.append(answer)
+            self._schedule_post_quiz_blessing()
             self._show_feedback(answer, question)
             return
         self.answers.append(answer)
+        self._schedule_post_quiz_blessing()
+
+    def _schedule_post_quiz_blessing(self) -> None:
+        if self.questions and self.question_index == len(self.questions) - 1:
+            self.post_quiz_blessing_deadline = time.monotonic() + POST_QUIZ_BLESSING_DELAY_SECONDS
 
     def _show_feedback(self, answer: dict[str, Any] | None = None, question: dict[str, Any] | None = None) -> None:
         if question is None:
@@ -388,9 +397,11 @@ class QuizState:
         self.last_activity = time.monotonic()
         self._publish()
 
-    def _reveal_blessing(self) -> None:
-        if self.state != "PRAYER":
+    def _reveal_blessing(self, *, force: bool = False) -> None:
+        if self.state != "PRAYER" and not force:
             return
+        if force and self.state != "RESULTS" and self.questions and len(self.answers) == len(self.questions):
+            self._finish_quiz()
         goddess, slogan = self.blessing_picker.pick(load_json("slogans.json"))
         image_file = next(filename for filename, label in GODDESSES if label == goddess)
         with SessionLocal() as db:
@@ -402,6 +413,7 @@ class QuizState:
             "slogan": slogan["text"], "prompt": f"Blessings, {self.player}",
         }
         self.deadline = time.monotonic() + float(self.settings["blessing_seconds"])
+        self.post_quiz_blessing_deadline = None
         self.last_activity = time.monotonic()
         self._publish()
 
@@ -414,6 +426,7 @@ class QuizState:
             self.payload = {"prompt": "Please say your name"}
             self.deadline = None
             self.feedback_deadline = None
+            self.post_quiz_blessing_deadline = None
             self.questions = []
             self.answers = []
             self.player = ""

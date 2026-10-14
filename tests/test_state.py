@@ -25,19 +25,41 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
         state.tick(state.feedback_deadline + 0.01)
         assert state.state == "FEEDBACK"
         state.tick(state.feedback_deadline + 4.01)
-    assert state.state == "RESULTS"
-    assert len(state.answers) == 5
-    assert state.payload["score"] == sum(answer["points"] for answer in state.answers)
-    assert state.get_leaderboard()[0]["name"] == "Test Visitor"
-    state.tick(state.deadline + 0.01)
-    assert state.state == "PRAYER"
-    state.handle_gesture("namaste")
     assert state.state == "BLESSING"
+    assert len(state.answers) == 5
+    assert state.get_leaderboard()[0]["score"] == sum(answer["points"] for answer in state.answers)
+    assert state.get_leaderboard()[0]["name"] == "Test Visitor"
     assert state.payload["name"] == "Test Visitor"
     assert state.payload["image"].startswith("/goddess/")
     assert state.payload["slogan"]
     state.tick(state.deadline + 0.01)
     assert state.state == "NAME"
+
+
+def test_final_answer_starts_five_second_blessing_countdown(isolated_db):
+    state = QuizState(simulate=True)
+    state.state = "QUESTION"
+    state.player = "Test Visitor"
+    state.questions = [{
+        "id": "final-question",
+        "difficulty": "Easy",
+        "correct_index": 0,
+        "reason": "Test explanation",
+    }]
+    state.answer_started = time.monotonic()
+    answered_at = time.monotonic()
+
+    state._record_answer(0, timed_out=False)
+
+    deadline = state.post_quiz_blessing_deadline
+    assert deadline is not None
+    assert 4.99 <= deadline - answered_at <= 5.01
+    assert state.state == "FEEDBACK"
+
+    state.tick(deadline)
+
+    assert state.state == "BLESSING"
+    assert state.payload["name"] == "Test Visitor"
 
 
 def test_prayer_entry_rearms_namaste_detection(isolated_db):
@@ -55,16 +77,6 @@ def test_prayer_entry_rearms_namaste_detection(isolated_db):
 
     assert state.state == "PRAYER"
     assert reset_count == 1
-
-
-def test_namaste_detection_reveals_blessing_without_waiting_for_lock(isolated_db):
-    state = QuizState(simulate=True)
-    state.state = "PRAYER"
-    state.player = "Test Visitor"
-    state.handle_gesture("namaste", locked=False)
-
-    assert state.state == "BLESSING"
-    assert state.payload["name"] == "Test Visitor"
 
 
 def test_name_confirmation_requires_ready_gesture_to_start(isolated_db):
