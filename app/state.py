@@ -229,7 +229,7 @@ class QuizState:
                         self._retry_name()
                 elif self.state == "QUESTION" and locked and count in (1, 2, 3, 4):
                     self._select_answer(count - 1)
-            elif event == "namaste" and locked:
+            elif event == "namaste":
                 if self.state == "PRAYER":
                     self._reveal_blessing()
             if locked and ((event == "namaste") or (event == "count" and count in (1, 2, 3, 4, 5))):

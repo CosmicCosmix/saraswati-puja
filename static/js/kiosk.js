@@ -16,6 +16,7 @@
   const blessingTitle = document.getElementById("blessing-title");
   const blessingQuote = document.getElementById("blessing-quote");
   const blessingRecipient = document.getElementById("blessing-recipient");
+  const blessingMusic = document.getElementById("blessing-music");
   let previousState = "";
   let previousView = "";
   let soundEnabled = true;
@@ -212,10 +213,27 @@
     }
   }
 
+  function stopBlessingMusic() {
+    blessingMusic.pause();
+    blessingMusic.currentTime = 0;
+  }
+
+  function playBlessingMusic() {
+    blessingMusic.currentTime = 0;
+    blessingMusic.play().catch(error => {
+      console.warn("Could not play blessing music. Add static/audio/blessing.mp3 and allow audio playback.", error);
+    });
+  }
+
   function playCue(name) {
-    if (!soundEnabled) { stopPrayerMusic(); return; }
+    if (!soundEnabled) {
+      stopPrayerMusic();
+      stopBlessingMusic();
+      return;
+    }
     if (name === "IDLE") { tone(523, .24, .035); return; }
     if (name === "PRAYER") {
+      stopBlessingMusic();
       if (!prayerAudio) {
         let beat = 0;
         prayerAudio = setInterval(() => tone([440, 554, 659][beat++ % 3], .75, .018), 1150);
@@ -224,12 +242,16 @@
     }
     stopPrayerMusic();
     if (name === "BLESSING") {
+      playBlessingMusic();
       tone(740, .35, .09);
       setTimeout(() => tone(988, .55, .07), 180);
-    } else if (name === "QUESTION") tone(590, .2);
-    else if (name === "FEEDBACK") tone(720, .25);
-    else if (name === "NAME") tone(470, .22);
-    else if (name === "RESULTS") tone(880, .4);
+    } else {
+      stopBlessingMusic();
+      if (name === "QUESTION") tone(590, .2);
+      else if (name === "FEEDBACK") tone(720, .25);
+      else if (name === "NAME") tone(470, .22);
+      else if (name === "RESULTS") tone(880, .4);
+    }
   }
 
   function escapeHtml(value) {
@@ -273,7 +295,14 @@
     else if (previousSnapshot && previousSnapshot.state !== "NAME" && microphonePermissionGranted) {
       window.setTimeout(startSpeechRecognition, 0);
     }
+    const wasSoundEnabled = soundEnabled;
     soundEnabled = state.sound_enabled !== false;
+    if (!soundEnabled) {
+      stopPrayerMusic();
+      stopBlessingMusic();
+    } else if (!wasSoundEnabled && mode === "BLESSING") {
+      playBlessingMusic();
+    }
     if (mode !== previousState) {
       playCue(mode);
       if (mode === "BLESSING" && soundEnabled && "speechSynthesis" in window) {

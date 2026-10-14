@@ -262,7 +262,7 @@ class CameraWorker:
                             if len(detected) >= 2 and namaste_detected([item[0] for item in detected], self.namaste_distance):
                                 self.lock.update(None, hand_present=True)
                                 update = self.namaste_lock.update(1, score=1)
-                                self.status = "Namaste detected — hold still"
+                                self.status = "Namaste detected"
                                 self.on_gesture("namaste", confidence=update.confidence, progress=update.progress, locked=update.locked,
                                                 awaiting_release=update.awaiting_release)
                             elif detected:

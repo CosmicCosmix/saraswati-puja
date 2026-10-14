@@ -55,6 +55,7 @@ Run `python run.py --simulate` when no camera or microphone is available. The ge
 
 - Edit `data/questions.json` and `data/slogans.json` while the kiosk is stopped, or use the authenticated editors in `/admin`. Questions are randomly selected in the order Moderate, Easy, Difficult, Easy, Difficult. Each starts with `needs_review: true` so local organizers can verify wording against their community's preferred tradition.
 - Place your supplied images in `static/goddesses/` with these exact filenames: `01_shailaputri.png`, `02_brahmacharini.png`, `03_chandraghanta.png`, `04_kushmanda.png`, `05_skandamata.png`, `06_katyayani.png`, `07_kalaratri.png`, `08_mahagauri.png`, `09_siddhidatri.png`. When a supplied image is absent, the kiosk serves a locally generated, original illustrated goddess card; it does not download artwork.
+- Place the blessing soundtrack at `static/audio/blessing.mp3`. It loops while the goddess blessing is displayed and follows the admin sound toggle.
 - The kiosk's gentle chimes and prayer tones are generated locally with the browser Web Audio API. The volunteer sound toggle mutes/unmutes them.
 
 ## Data, settings and privacy

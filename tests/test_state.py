@@ -57,6 +57,16 @@ def test_prayer_entry_rearms_namaste_detection(isolated_db):
     assert reset_count == 1
 
 
+def test_namaste_detection_reveals_blessing_without_waiting_for_lock(isolated_db):
+    state = QuizState(simulate=True)
+    state.state = "PRAYER"
+    state.player = "Test Visitor"
+    state.handle_gesture("namaste", locked=False)
+
+    assert state.state == "BLESSING"
+    assert state.payload["name"] == "Test Visitor"
+
+
 def test_name_confirmation_requires_ready_gesture_to_start(isolated_db):
     state = QuizState(simulate=True)
     state.accept_name("Test Visitor")
