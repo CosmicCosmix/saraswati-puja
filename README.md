@@ -45,7 +45,7 @@ Open the same kiosk and display URLs in a supported browser. Grant microphone pe
 
 Run `python run.py --simulate` when no camera or microphone is available. The gesture and microphone workers are replaced by volunteer test controls, while the UI still runs through the same server-side state machine.
 
-- The kiosk starts by asking for a spoken name. Show 1 finger to confirm the name, then 1 finger again at the ready prompt to start. Show 2 fingers to retry the name or decline the quiz. During questions, 1–4 fingers select options A–D. After five questions, the kiosk returns to name capture for the next player.
+- The kiosk starts by asking for a spoken name. Show 1 finger to confirm the name, then 1 finger again at the ready prompt to start. Show 2 fingers to retry the name or decline the quiz. During questions, 1–4 fingers select options A–D. After six questions, the kiosk returns to name capture for the next player.
 - Kiosk volunteer hotkeys: `1`–`4` answer/confirm; `P` simulates namaste; `N` skips the current question; `Esc` returns to name capture.
 - The typed-name test endpoint is `POST /api/dev/name` with JSON such as `{"name":"Asha Rao"}`. Use `POST /api/dev/action` with `{"action":"1"}`, `{"action":"namaste"}`, `{"action":"skip"}` or `{"action":"reset"}` for deterministic driving. These endpoints return 404 unless simulation mode is active.
 - Simulation volunteers can pause/resume automatic state timers with `{"action":"pause"}` / `{"action":"resume"}` while taking screenshots; this does not exist in physical mode.
@@ -53,7 +53,7 @@ Run `python run.py --simulate` when no camera or microphone is available. The ge
 
 ## Content and images
 
-- Edit `data/questions.json` and `data/slogans.json` while the kiosk is stopped, or use the authenticated editors in `/admin`. Questions are randomly selected in the order Moderate, Easy, Difficult, Easy, Difficult. Each starts with `needs_review: true` so local organizers can verify wording against their community's preferred tradition.
+- Edit `data/questions.json` and `data/slogans.json` while the kiosk is stopped, or use the authenticated editors in `/admin`. Six active questions are randomly sampled without replacement from the complete question pool, and their answer options are shuffled for each quiz. Each question starts with `needs_review: true` so local organizers can verify wording against their community's preferred tradition.
 - Place your supplied images in `static/goddesses/` with these exact filenames: `01_shailaputri.png`, `02_brahmacharini.png`, `03_chandraghanta.png`, `04_kushmanda.png`, `05_skandamata.png`, `06_katyayani.png`, `07_kalaratri.png`, `08_mahagauri.png`, `09_siddhidatri.png`. When a supplied image is absent, the kiosk serves a locally generated, original illustrated goddess card; it does not download artwork.
 - The kiosk's gentle chimes and prayer tones are generated locally with the browser Web Audio API. The volunteer sound toggle mutes/unmutes them.
 

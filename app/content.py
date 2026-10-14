@@ -34,6 +34,29 @@ def save_json(filename: str, entries: list[dict[str, Any]]) -> None:
     (DATA_DIR / filename).write_text(json.dumps(entries, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def shuffle_question_options(
+    question: dict[str, Any],
+    rng: random.Random | None = None,
+) -> dict[str, Any]:
+    options = question.get("options")
+    correct_index = question.get("correct_index")
+    if (
+        not isinstance(options, list)
+        or len(options) != 4
+        or not isinstance(correct_index, int)
+        or isinstance(correct_index, bool)
+        or not 0 <= correct_index < len(options)
+    ):
+        raise ValueError(f"Question {question.get('id', '<unknown>')} needs four options and a valid correct_index.")
+
+    shuffled = list(enumerate(options))
+    (rng or random.SystemRandom()).shuffle(shuffled)
+    displayed = dict(question)
+    displayed["options"] = [option for _, option in shuffled]
+    displayed["correct_index"] = next(index for index, (source_index, _) in enumerate(shuffled) if source_index == correct_index)
+    return displayed
+
+
 class BlessingPicker:
     def __init__(self, recent_goddesses: list[str] | None = None):
         self.recent_goddesses = deque(recent_goddesses or [], maxlen=1)

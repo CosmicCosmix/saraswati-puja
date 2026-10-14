@@ -291,17 +291,30 @@ async def update_content(kind: str, request: Request, _username: str = Depends(r
             if len(content) < 45:
                 raise ValueError("Keep at least 45 questions in the question bank.")
             active_counts = {difficulty: 0 for difficulty in ("Easy", "Moderate", "Difficult")}
+            question_ids: set[str] = set()
             for item in content:
+                question_id = item.get("id")
+                if not isinstance(question_id, str) or not question_id or question_id in question_ids:
+                    raise ValueError("Every question needs a unique, non-empty id.")
+                question_ids.add(question_id)
                 if len(item["options"]) != 4 or len(item["text"]) > 140 or len(item["reason"]) > 120:
                     raise ValueError("Every question needs four options, text <=140 chars and reason <=120 chars.")
+                if len(set(item["options"])) != 4:
+                    raise ValueError("Every question needs four distinct options.")
                 if any(len(option) > 40 for option in item["options"]):
                     raise ValueError("Option text must be 40 characters or fewer.")
-                if item["difficulty"] not in {"Easy", "Moderate", "Difficult"} or not 0 <= int(item["correct_index"]) <= 3:
+                correct_index = item.get("correct_index")
+                if (
+                    item["difficulty"] not in {"Easy", "Moderate", "Difficult"}
+                    or not isinstance(correct_index, int)
+                    or isinstance(correct_index, bool)
+                    or not 0 <= correct_index < len(item["options"])
+                ):
                     raise ValueError("Invalid difficulty or correct_index.")
                 if item.get("active", True):
                     active_counts[item["difficulty"]] += 1
-            if active_counts["Easy"] < 2 or active_counts["Moderate"] < 1 or active_counts["Difficult"] < 2:
-                raise ValueError("Active questions must cover the quiz's 2 Easy, 1 Moderate and 2 Difficult slots.")
+            if any(count < 2 for count in active_counts.values()):
+                raise ValueError("Keep at least two active questions at each difficulty.")
         else:
             if not content or not any(item.get("active", True) for item in content):
                 raise ValueError("Keep at least one active slogan.")

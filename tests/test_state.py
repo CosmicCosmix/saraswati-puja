@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import time
+import random
 
 import pytest
 
-from app.content import load_json
+from app.content import load_json, shuffle_question_options
 from app.models import AppSetting, QuizSession
 from app.state import QuizState
 
@@ -19,7 +20,10 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     assert state.state == "READY"
     state.handle_gesture("count", count=1)
     assert state.state == "QUESTION"
-    for _ in range(5):
+    assert len(state.questions) == 6
+    assert state.payload["total"] == 6
+    assert len({question["id"] for question in state.questions}) == 6
+    for _ in range(6):
         current = state.questions[state.question_index]
         state.handle_gesture("count", count=current["correct_index"] + 1)
         assert state.state == "FEEDBACK"
@@ -27,7 +31,7 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
         assert state.state == "FEEDBACK"
         state.tick(state.feedback_deadline + 4.01)
     assert state.state == "RESULTS"
-    assert len(state.answers) == 5
+    assert len(state.answers) == 6
     assert state.payload["score"] == sum(answer["points"] for answer in state.answers)
     assert state.get_leaderboard()[0]["name"] == "Test Visitor"
     state.tick(state.deadline + 0.01)
@@ -42,6 +46,69 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     assert state.payload["slogan"] == goddess["quote"]
     state.tick(state.deadline + 0.01)
     assert state.state == "NAME"
+
+
+def test_question_selection_samples_six_unique_questions_from_pool(isolated_db):
+    state = QuizState(simulate=True)
+    pool = load_json("questions.json")
+
+    selected = state._choose_questions()
+
+    assert len(selected) == 6
+    assert len({question["id"] for question in selected}) == 6
+    assert {question["id"] for question in selected} <= {question["id"] for question in pool}
+
+    next_selected = state._choose_questions()
+    assert len(next_selected) == 6
+    assert len({question["id"] for question in next_selected}) == 6
+    assert {question["id"] for question in next_selected} <= {question["id"] for question in pool}
+
+
+def test_answer_scoring_and_feedback_follow_shuffled_correct_option(isolated_db):
+    state = QuizState(simulate=True)
+    source_question = load_json("questions.json")[0]
+    correct_positions = set()
+
+    for seed in range(100):
+        question = shuffle_question_options(source_question, random.Random(seed))
+        correct_index = question["correct_index"]
+        if correct_index in correct_positions:
+            continue
+        correct_positions.add(correct_index)
+        state.questions = [question]
+        state.question_index = 0
+        state.state = "QUESTION"
+        state.selected_answer = None
+        state.answers = []
+        state.answer_started = time.monotonic()
+        state.payload = {
+            "options": question["options"],
+            "difficulty": question["difficulty"],
+            "question": question["text"],
+        }
+
+        state.handle_gesture("count", count=correct_index + 1)
+        assert state.answers[-1]["correct"] is True
+        assert state.answers[-1]["points"] > 0
+        state.tick(state.feedback_deadline + 0.01)
+        assert state.payload["correct"] is True
+        assert state.payload["correct_index"] == correct_index
+        assert state.payload["options"][correct_index] == source_question["options"][source_question["correct_index"]]
+
+        wrong_index = (correct_index + 1) % 4
+        state.questions = [question]
+        state.question_index = 0
+        state.state = "QUESTION"
+        state.selected_answer = None
+        state.answers = []
+        state.answer_started = time.monotonic()
+        state.handle_gesture("count", count=wrong_index + 1)
+        assert state.answers[-1]["correct"] is False
+        assert state.answers[-1]["points"] == 0
+        if len(correct_positions) == 4:
+            break
+
+    assert correct_positions == {0, 1, 2, 3}
 
 
 def test_namaste_keeps_blessing_unchanged_until_a_new_prayer(isolated_db):

@@ -11,7 +11,7 @@ from typing import Any
 
 from sqlalchemy import select
 
-from app.content import BlessingPicker, load_json
+from app.content import BlessingPicker, load_json, shuffle_question_options
 from app.db import SessionLocal
 from app.models import AppSetting, BlessingLog, GestureTimeout, QuizSession
 from app.scoring import leaderboard_order, score_answer
@@ -29,7 +29,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "blessing_seconds": 12,
     "sound_enabled": True,
 }
-DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
+QUESTIONS_PER_SESSION = 6
 
 
 class QuizState:
@@ -54,7 +54,6 @@ class QuizState:
         self.feedback_deadline: float | None = None
         self.leaderboard_id: int | None = None
         self.player_rank: int | None = None
-        self.previous_player_questions: set[str] = set()
         self.blessing_picker = BlessingPicker()
         self.timeout_count = 0
         self._settings_changed = None
@@ -113,7 +112,7 @@ class QuizState:
                 "now_playing": {
                     "name": self.player,
                     "question": self.question_index + 1 if self.state in {"QUESTION", "FEEDBACK"} else 0,
-                    "total": 5,
+                    "total": QUESTIONS_PER_SESSION,
                     "active": self.state not in {"NAME", "BLESSING"},
                     "idle": self.state == "NAME",
                 },
@@ -279,32 +278,27 @@ class QuizState:
 
     def _choose_questions(self) -> list[dict[str, Any]]:
         questions = [q for q in load_json("questions.json") if q.get("active", True)]
-        selected: list[dict[str, Any]] = []
-        for difficulty in DIFFICULTY_SLOTS:
-            choices = [q for q in questions if q.get("difficulty") == difficulty and q["id"] not in {item["id"] for item in selected}]
-            if not choices:
-                raise RuntimeError(f"Not enough active {difficulty} questions")
-            fresh = [q for q in choices if q["id"] not in self.previous_player_questions]
-            selected.append(random.choice(fresh or choices))
-        return selected
+        if len(questions) < QUESTIONS_PER_SESSION:
+            raise RuntimeError(f"Not enough active questions for a {QUESTIONS_PER_SESSION}-question quiz.")
+        return random.sample(questions, QUESTIONS_PER_SESSION)
 
     def _show_question(self) -> None:
         self.questions = self._choose_questions()
-        self.previous_player_questions = {item["id"] for item in self.questions}
         self.question_index = 0
         self._begin_question()
 
     def _begin_question(self) -> None:
         if self._question_changed:
             self._question_changed()
-        question = self.questions[self.question_index]
+        question = shuffle_question_options(self.questions[self.question_index])
+        self.questions[self.question_index] = question
         self.state = "QUESTION"
         self.answer_started = time.monotonic()
         self.deadline = self.answer_started + float(self.settings["question_seconds"])
         self.feedback_deadline = None
         self.selected_answer = None
         self.payload = {
-            "name": self.player, "number": self.question_index + 1, "total": 5,
+            "name": self.player, "number": self.question_index + 1, "total": len(self.questions),
             "question": question["text"], "options": question["options"],
             "difficulty": question["difficulty"], "seconds": self.settings["question_seconds"],
             "ends_at": time.time() + float(self.settings["question_seconds"]),
