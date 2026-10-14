@@ -109,13 +109,13 @@ def test_namaste_lock_confirms_faster_without_changing_finger_gesture_timing():
         "namaste_distance": 0.35,
     })
 
-    assert worker.namaste_lock.window == 3
+    assert worker.namaste_lock.window == 1
     assert worker.namaste_lock.min_confidence == 0.5
-    assert worker.namaste_lock.hold_seconds == 0.1
+    assert worker.namaste_lock.hold_seconds == 0
     assert worker.lock.hold_seconds == 0.6
 
 
-def test_namaste_lock_confirms_within_200ms_of_stable_detection():
+def test_namaste_lock_confirms_on_first_detection_without_hold():
     worker = CameraWorker(lambda *_args, **_kwargs: None, enabled=False)
     worker.configure({
         "vote_frames": 8,
@@ -124,15 +124,11 @@ def test_namaste_lock_confirms_within_200ms_of_stable_detection():
         "namaste_distance": 0.35,
     })
 
-    first_lock_time = None
-    for frame in range(10):
-        update = worker.namaste_lock.update(1, score=1, now=frame / 30)
-        if update.locked:
-            first_lock_time = frame / 30
-            break
+    update = worker.namaste_lock.update(1, score=1, now=0)
 
-    assert first_lock_time is not None
-    assert first_lock_time < 0.2
+    assert update.locked
+    assert update.progress == 1
+    assert worker.lock.hold_seconds == 0.6
 
 
 def test_lock_requires_stable_hold_and_resets_below_confidence():

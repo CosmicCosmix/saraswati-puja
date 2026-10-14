@@ -12,9 +12,9 @@ from typing import Callable, Iterable
 logger = logging.getLogger(__name__)
 
 FINGER_JOINTS = ((8, 6), (12, 10), (16, 14), (20, 18))
-NAMASTE_VOTE_FRAMES = 3
+NAMASTE_VOTE_FRAMES = 1
 NAMASTE_MIN_CONFIDENCE = 0.5
-NAMASTE_HOLD_SECONDS = 0.1
+NAMASTE_HOLD_SECONDS = 0
 
 
 def distance(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -136,7 +136,8 @@ class GestureLock:
         if most_common != self.candidate or confidence < self.min_confidence:
             self.candidate = most_common if confidence >= self.min_confidence else None
             self.started = now if self.candidate is not None else None
-            return LockUpdate(most_common, confidence, 0.0, False)
+            if self.candidate is None or self.hold_seconds > 0:
+                return LockUpdate(most_common, confidence, 0.0, False)
         if self.started is None:
             self.started = now
         elapsed = max(0.0, now - self.started)
