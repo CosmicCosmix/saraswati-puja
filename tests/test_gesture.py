@@ -30,6 +30,13 @@ def test_count_fingers_from_zero_through_five():
         assert count_fingers(make_hand(count)) == count
 
 
+def test_folded_thumb_does_not_increase_finger_count():
+    assert count_fingers(make_hand(1)) == 1
+    assert count_fingers(make_hand(2)) == 2
+    assert count_fingers(make_hand(3)) == 3
+    assert count_fingers(make_hand(4)) == 4
+
+
 def test_dark_camera_frames_are_reported():
     class Frame:
         def __init__(self, brightness):
@@ -58,15 +65,56 @@ def test_finger_count_is_rotation_robust():
 
 
 def test_namaste_requires_two_close_upward_hands():
-    left = [(0.48, 0.72)] * 21
-    right = [(0.52, 0.72)] * 21
-    for hand, x in ((left, 0.48), (right, 0.52)):
-        hand[9] = (x, 0.52)
-        hand[8] = (x, 0.3)
+    left = [(0.42, 0.75)] * 21
+    right = [(0.58, 0.75)] * 21
+    for hand, x in ((left, 0.42), (right, 0.58)):
+        hand[5] = (x - 0.04, 0.58)
+        hand[9] = (x, 0.55)
+        hand[13] = (x + 0.02, 0.57)
+        hand[17] = (x + 0.04, 0.59)
+        hand[8] = (0.49, 0.31)
+        hand[12] = (0.50, 0.29)
+        hand[16] = (0.51, 0.30)
+        hand[20] = (0.52, 0.33)
     assert namaste_detected([left, right])
     assert not namaste_detected([left])
     far_hand = [((x + 0.4), y) for x, y in right]
     assert not namaste_detected([left, far_hand])
+
+
+def test_namaste_lock_confirms_faster_without_changing_finger_gesture_timing():
+    worker = CameraWorker(lambda *_args, **_kwargs: None, enabled=False)
+    worker.configure({
+        "vote_frames": 8,
+        "confidence_threshold": 0.65,
+        "hold_ms": 600,
+        "namaste_distance": 0.35,
+    })
+
+    assert worker.namaste_lock.window == 3
+    assert worker.namaste_lock.min_confidence == 0.5
+    assert worker.namaste_lock.hold_seconds == 0.1
+    assert worker.lock.hold_seconds == 0.6
+
+
+def test_namaste_lock_confirms_within_200ms_of_stable_detection():
+    worker = CameraWorker(lambda *_args, **_kwargs: None, enabled=False)
+    worker.configure({
+        "vote_frames": 8,
+        "confidence_threshold": 0.65,
+        "hold_ms": 600,
+        "namaste_distance": 0.35,
+    })
+
+    first_lock_time = None
+    for frame in range(10):
+        update = worker.namaste_lock.update(1, score=1, now=frame / 30)
+        if update.locked:
+            first_lock_time = frame / 30
+            break
+
+    assert first_lock_time is not None
+    assert first_lock_time < 0.2
 
 
 def test_lock_requires_stable_hold_and_resets_below_confidence():

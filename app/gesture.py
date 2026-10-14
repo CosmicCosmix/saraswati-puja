@@ -12,6 +12,9 @@ from typing import Callable, Iterable
 logger = logging.getLogger(__name__)
 
 FINGER_JOINTS = ((8, 6), (12, 10), (16, 14), (20, 18))
+NAMASTE_VOTE_FRAMES = 3
+NAMASTE_MIN_CONFIDENCE = 0.5
+NAMASTE_HOLD_SECONDS = 0.1
 
 
 def distance(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -48,8 +51,9 @@ def count_fingers(points: Iterable[tuple[float, float]]) -> int:
         for (tip, pip), mcp in zip(FINGER_JOINTS, finger_mcps)
     )
     thumb_is_straight = _joint_alignment(landmarks[2], landmarks[3], landmarks[4]) > 0.2
-    thumb_is_away_from_palm = distance(landmarks[4], landmarks[5]) > distance(landmarks[3], landmarks[5]) * 1.15
-    count += thumb_is_straight and thumb_is_away_from_palm
+    thumb_reaches_out = distance(landmarks[4], landmarks[5]) > distance(landmarks[3], landmarks[5]) * 1.3
+    thumb_moves_away_from_wrist = distance(landmarks[4], wrist) > distance(landmarks[3], wrist) * 1.15
+    count += thumb_is_straight and thumb_reaches_out and thumb_moves_away_from_wrist
     return int(count)
 
 
@@ -57,13 +61,17 @@ def namaste_detected(hands: list[list[tuple[float, float]]], threshold: float = 
     if len(hands) < 2 or any(len(hand) < 21 for hand in hands[:2]):
         return False
     left, right = hands[:2]
-    hand_size = max(distance(hand[0], hand[9]) for hand in (left, right))
+    hand_sizes = [distance(hand[0], hand[9]) for hand in (left, right)]
+    hand_size = min(hand_sizes)
     if hand_size <= 0:
         return False
-    tips_close = distance(left[8], right[8]) < threshold * hand_size
-    wrists_close = distance(left[0], right[0]) < threshold * hand_size
-    fingers_up = all(hand[8][1] < hand[0][1] for hand in (left, right))
-    return tips_close and wrists_close and fingers_up
+    close_fingertips = sum(
+        distance(left[tip], right[tip]) < threshold * hand_size
+        for tip in (8, 12, 16, 20)
+    )
+    palm_center_close = distance(left[9], right[9]) < (threshold + 0.5) * hand_size
+    wrists_reasonably_close = distance(left[0], right[0]) < 1.75 * hand_size
+    return close_fingertips >= 3 and palm_center_close and wrists_reasonably_close
 
 
 @dataclass
@@ -152,7 +160,11 @@ class CameraWorker:
         self.latest_jpeg: bytes | None = None
         self.status = "Simulation mode" if not enabled else "Starting camera..."
         self.lock = GestureLock(window=8, min_confidence=0.65, hold_seconds=0.6)
-        self.namaste_lock = GestureLock(window=8, min_confidence=0.65, hold_seconds=0.6)
+        self.namaste_lock = GestureLock(
+            window=NAMASTE_VOTE_FRAMES,
+            min_confidence=NAMASTE_MIN_CONFIDENCE,
+            hold_seconds=NAMASTE_HOLD_SECONDS,
+        )
         self.namaste_distance = 0.35
 
     def configure(self, settings: dict[str, float | int]) -> None:
@@ -162,15 +174,18 @@ class CameraWorker:
             hold_seconds=float(settings["hold_ms"]) / 1000,
         )
         self.namaste_lock = GestureLock(
-            window=int(settings["vote_frames"]),
-            min_confidence=float(settings["confidence_threshold"]),
-            hold_seconds=float(settings["hold_ms"]) / 1000,
+            window=NAMASTE_VOTE_FRAMES,
+            min_confidence=NAMASTE_MIN_CONFIDENCE,
+            hold_seconds=NAMASTE_HOLD_SECONDS,
         )
         self.namaste_distance = float(settings["namaste_distance"])
 
     def reset_locks(self) -> None:
         self.lock.require_release()
         self.namaste_lock.require_release()
+
+    def reset_namaste_lock(self) -> None:
+        self.namaste_lock.reset()
 
     def start(self) -> None:
         if self.enabled and (self._thread is None or not self._thread.is_alive()):
@@ -227,7 +242,6 @@ class CameraWorker:
                             logger.warning("Camera %s stopped returning frames", self.device)
                             break
                         frame = cv2.flip(frame, 1)
-                        height, width = frame.shape[:2]
                         if frame_is_too_dark(frame):
                             self.lock.update(None)
                             self.namaste_lock.update(None)
@@ -246,7 +260,7 @@ class CameraWorker:
                                     mp.solutions.drawing_utils.draw_landmarks(frame, hand, hands_api.HAND_CONNECTIONS)
                             if len(detected) >= 2 and namaste_detected([item[0] for item in detected], self.namaste_distance):
                                 self.lock.update(None, hand_present=True)
-                                update = self.namaste_lock.update(1, min(item[1] for item in detected))
+                                update = self.namaste_lock.update(1, score=1)
                                 self.status = "Namaste detected — hold still"
                                 self.on_gesture("namaste", confidence=update.confidence, progress=update.progress, locked=update.locked,
                                                 awaiting_release=update.awaiting_release)
@@ -263,17 +277,6 @@ class CameraWorker:
                                 self.namaste_lock.update(None)
                                 self.status = "Camera connected — show your hand inside the guide"
                                 self.on_gesture("count", count=None, confidence=0, progress=0, locked=False)
-                        cv2.rectangle(frame, (int(width * 0.05), int(height * 0.05)), (int(width * 0.95), int(height * 0.98)), (0, 190, 255), 2)
-                        cv2.putText(
-                            frame,
-                            self.status,
-                            (18, height - 18),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.55,
-                            (255, 255, 255),
-                            2,
-                            cv2.LINE_AA,
-                        )
                         _, encoded = cv2.imencode(".jpg", frame)
                         self.latest_jpeg = encoded.tobytes()
                         elapsed = time.perf_counter() - started

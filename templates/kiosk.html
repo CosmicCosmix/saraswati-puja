@@ -121,73 +121,6 @@
             padding: 24px 28px 0;
         }
 
-        /* Top instruction banner */
-
-        .instruction-banner {
-            min-height: 92px;
-            padding: 20px 26px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            background: #fcf0e9;
-            border: 1px solid #f9e9e0;
-            border-radius: 20px;
-            margin-bottom: 22px;
-        }
-
-        .banner-left {
-            display: flex;
-            align-items: center;
-            gap: 17px;
-            min-width: 0;
-        }
-
-        .banner-icon {
-            width: 38px;
-            height: 38px;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            font-size: 26px;
-        }
-
-        .banner-copy h2 {
-            margin: 0 0 5px;
-            color: var(--maroon-dark);
-            font-family: "Playfair Display", Georgia, serif;
-            font-size: clamp(18px, 2vw, 23px);
-            font-weight: 600;
-            line-height: 1.3;
-        }
-
-        .banner-copy p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .mode-badge {
-            flex-shrink: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 15px;
-            border-radius: 30px;
-            background: #efe2da;
-            color: #674325;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: .3px;
-        }
-
-        .mode-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #efb36e;
-        }
-
         /* Two-column dashboard */
 
         .dashboard {
@@ -225,6 +158,20 @@
             text-align: center;
             background:
                 radial-gradient(ellipse at 50% 22%, #fffaf7 0%, #fff 58%);
+        }
+
+        #name-entry-screen,
+        #message-card {
+            width: 100%;
+            flex: 1;
+        }
+
+        #name-entry-screen {
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
         }
 
         .section-kicker {
@@ -271,6 +218,10 @@
             box-shadow: 0 0 0 9px rgba(95, 184, 123, .12);
         }
 
+        .mic-orb.listening svg path:last-child {
+            display: none;
+        }
+
         .mic-caption {
             margin-top: 6px;
             color: #6c5957;
@@ -287,11 +238,15 @@
         }
 
         .audio-description {
-            max-width: 410px;
+            width: min(100%, 420px);
+            min-height: 50px;
             margin: 0;
             color: var(--muted);
             font-size: 15px;
             line-height: 1.75;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .primary-button {
@@ -360,6 +315,201 @@
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 10px;
             margin-top: 17px;
+        }
+
+        #message-card {
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 36px clamp(16px, 3vw, 40px);
+        }
+
+        #message-card[hidden] {
+            display: none;
+        }
+
+        #message-card .eyebrow {
+            margin: 0 0 16px;
+            color: var(--gold);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        #message-card .content h2 {
+            margin: 0 0 16px;
+            font-size: clamp(28px, 3vw, 42px);
+            line-height: 1.2;
+        }
+
+        #message-card .content p {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: clamp(16px, 1.4vw, 20px);
+            line-height: 1.65;
+        }
+
+        .question-view {
+            position: relative;
+            width: 100%;
+            text-align: left;
+        }
+
+        .question-topline {
+            min-height: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 72px 18px 0;
+            color: #8a6a54;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .9px;
+        }
+
+        .question-difficulty {
+            color: #a56820;
+        }
+
+        .question-timer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 46px;
+            height: 46px;
+            margin: 0;
+            font-size: 17px;
+        }
+
+        .question-title {
+            max-width: 760px;
+            margin: 0 0 14px !important;
+            color: #302628 !important;
+            font-family: "Playfair Display", Georgia, serif !important;
+            font-size: clamp(24px, 2.35vw, 34px) !important;
+            font-weight: 600;
+            line-height: 1.3 !important;
+            text-align: left;
+        }
+
+        .question-accent {
+            width: 34px;
+            height: 3px;
+            display: block;
+            margin: 0 0 17px;
+            border-radius: 3px;
+            background: #ed9b27;
+        }
+
+        .answer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .answer-card {
+            min-width: 0;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 13px 14px 11px;
+            border: 1px solid #f0ebe8;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(60, 32, 25, .04);
+            transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+        }
+
+        .answer-card.selected {
+            border-color: #f2d8c7;
+            background: #fcf0e9;
+            box-shadow: 0 3px 8px rgba(60, 32, 25, .08);
+        }
+
+        .answer-card.correct {
+            border-color: #a9d6b8;
+            background: #eff8f1;
+        }
+
+        .answer-card-heading {
+            min-width: 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+        }
+
+        .answer-letter {
+            width: 27px;
+            height: 27px;
+            flex: 0 0 27px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #f8ece7;
+            color: #49343a;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .answer-card.selected .answer-letter {
+            background: #8b1933;
+            color: #fff;
+        }
+
+        .answer-copy {
+            min-width: 0;
+            flex: 1;
+            color: #3c3030;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(14px, 1.35vw, 18px);
+            font-weight: 600;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        .answer-check {
+            width: 19px;
+            height: 19px;
+            flex: 0 0 19px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #8b1933;
+            color: #fff;
+            font: 700 12px/1 "DM Sans", sans-serif;
+        }
+
+        .answer-card.correct .answer-check {
+            background: #318254;
+        }
+
+        .answer-hint {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            color: #756762;
+            font-size: 9px;
+            line-height: 1.3;
+        }
+
+        .question-instruction,
+        .answer-result {
+            margin: 15px 0 0 !important;
+            color: #76676a !important;
+            font-size: 12px !important;
+            line-height: 1.5 !important;
+            text-align: center;
+        }
+
+        #message-card .content .feedback-reason {
+            margin-top: 7px;
+            font-size: 13px;
+            text-align: center;
         }
 
         .name-input-wrap {
@@ -471,16 +621,6 @@
             background: #ebdfda;
         }
 
-        .camera-frame::before {
-            content: "";
-            position: absolute;
-            inset: 12px;
-            z-index: 2;
-            border: 1px solid rgba(255, 255, 255, .17);
-            border-radius: 9px;
-            pointer-events: none;
-        }
-
         .camera-frame img {
             position: absolute;
             inset: 0;
@@ -494,38 +634,6 @@
         .camera-frame img:not([src]),
         .camera-frame img[src=""] {
             display: none;
-        }
-
-        .camera-ring {
-            position: absolute;
-            top: 46%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 43%;
-            aspect-ratio: 1;
-            display: grid;
-            place-items: center;
-            border: none;
-            border-radius: 0;
-            background:
-                linear-gradient(#92561b, #92561b) left top / 16px 2px no-repeat,
-                linear-gradient(#92561b, #92561b) left top / 2px 16px no-repeat,
-                linear-gradient(#92561b, #92561b) right top / 16px 2px no-repeat,
-                linear-gradient(#92561b, #92561b) right top / 2px 16px no-repeat,
-                linear-gradient(#92561b, #92561b) left bottom / 16px 2px no-repeat,
-                linear-gradient(#92561b, #92561b) left bottom / 2px 16px no-repeat,
-                linear-gradient(#92561b, #92561b) right bottom / 16px 2px no-repeat,
-                linear-gradient(#92561b, #92561b) right bottom / 2px 16px no-repeat;
-            background-color: transparent;
-            box-shadow: none;
-            pointer-events: none;
-            z-index: 3;
-        }
-
-        .camera-ring span {
-            color: #b18185;
-            font-size: 48px;
-            filter: none;
         }
 
         .camera-guidance {
@@ -550,11 +658,6 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .guide-instruction span {
-            color: #966426;
-            font-size: 17px;
         }
 
         .confidence {
@@ -634,40 +737,6 @@
             flex-shrink: 0;
         }
 
-        /* Privacy / settings row */
-
-        .camera-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 17px;
-            color: #76676a;
-            font-size: 11px;
-        }
-
-        .privacy-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .privacy-indicator span {
-            color: #898449;
-            font-size: 17px;
-        }
-
-        .settings-link {
-            color: #87652f;
-            text-decoration: none;
-        }
-
-        .settings-link:hover {
-            color: var(--maroon);
-            text-decoration: underline;
-        }
-
         /* Existing content fallback and quiz components */
 
         .content {
@@ -741,85 +810,6 @@
             font-size: 17px;
         }
 
-        /* Footer strips */
-
-        .main-footer {
-            min-height: 76px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 18px;
-            margin-top: 24px;
-            padding: 15px 20px;
-            border: 1px solid #f6e8df;
-            border-radius: 18px;
-            background: #fcf0e9;
-        }
-
-        .footer-message {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            color: #49393a;
-            font-size: 14px;
-        }
-
-        .footer-hand {
-            width: 36px;
-            height: 36px;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            border-radius: 50%;
-            background: #f9dfcd;
-            color: #79512c;
-            font-size: 20px;
-        }
-
-        .footer-star {
-            color: #a56820;
-        }
-
-        .footer-series {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #776264;
-            font-size: 10px;
-        }
-
-        .back-to-top {
-            width: 34px;
-            height: 34px;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-            border: none;
-            border-radius: 50%;
-            background: #f6e8e1;
-            color: #65463e;
-            text-decoration: none;
-            font-size: 19px;
-        }
-
-        .legal-footer {
-            min-height: 39px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 10px max(20px, calc((100vw - 1510px) / 2));
-            margin-top: 22px;
-            background: #f7eee9;
-            color: #716264;
-            font-size: 10px;
-        }
-
-        .legal-footer span {
-            line-height: 1.6;
-        }
-
         /* Accessibility */
 
         button:focus-visible,
@@ -870,12 +860,9 @@
                 gap: 7px;
             }
 
-            .main-footer {
-                margin-top: 20px;
-            }
         }
 
-        @media (max-width: 720px) {
+        @media (max-width: 850px) {
             .university-header {
                 height: 62px;
                 padding: 7px 17px;
@@ -895,30 +882,6 @@
                 padding: 16px 13px 0;
             }
 
-            .instruction-banner {
-                align-items: flex-start;
-                padding: 18px 15px;
-                gap: 12px;
-                border-radius: 15px;
-            }
-
-            .banner-left {
-                gap: 10px;
-            }
-
-            .banner-copy h2 {
-                font-size: 18px;
-            }
-
-            .banner-copy p {
-                line-height: 1.6;
-            }
-
-            .mode-badge {
-                padding: 7px 9px;
-                font-size: 9px;
-            }
-
             .dashboard {
                 grid-template-columns: minmax(0, 1fr);
                 gap: 17px;
@@ -934,6 +897,11 @@
                 padding: 29px 20px 25px;
             }
 
+            #name-entry-screen,
+            #message-card {
+                min-height: 540px;
+            }
+
             .mic-orb {
                 width: 120px;
                 height: 120px;
@@ -943,44 +911,76 @@
                 font-size: 29px;
             }
 
+            #message-card {
+                padding: 30px 18px;
+            }
+
+            .question-title {
+                font-size: clamp(23px, 5.5vw, 31px) !important;
+            }
+
+            .answer-grid {
+                gap: 9px;
+            }
+
+            .answer-card {
+                min-height: 94px;
+                padding: 11px 10px 9px;
+            }
+
             .camera-frame {
                 aspect-ratio: 1.2 / 1;
             }
 
-            .main-footer {
-                align-items: flex-start;
-                flex-direction: column;
-                padding: 17px;
-            }
-
-            .footer-series {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .legal-footer {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 15px;
-                margin-top: 15px;
-            }
         }
 
         @media (max-width: 420px) {
-            .instruction-banner {
-                flex-direction: column;
-            }
-
-            .mode-badge {
-                margin-left: 47px;
-            }
-
             .name-entry {
                 grid-template-columns: minmax(0, 1fr);
             }
 
             .continue-button {
                 width: 100%;
+            }
+
+            .question-topline {
+                margin-bottom: 15px;
+                font-size: 9px;
+            }
+
+            .question-timer {
+                top: 25px;
+                right: 16px;
+                width: 40px;
+                height: 40px;
+                font-size: 15px;
+            }
+
+            .answer-grid {
+                gap: 8px;
+            }
+
+            .answer-card {
+                min-height: 90px;
+                padding: 9px 8px;
+            }
+
+            .answer-card-heading {
+                gap: 6px;
+            }
+
+            .answer-letter {
+                width: 24px;
+                height: 24px;
+                flex-basis: 24px;
+            }
+
+            .answer-copy {
+                font-size: 13px;
+            }
+
+            .answer-hint {
+                font-size: 8px;
             }
 
             .gesture-grid {
@@ -991,15 +991,132 @@
                 font-size: 10px;
             }
 
-            .camera-bottom {
-                align-items: flex-start;
-            }
-
             .confidence-track {
                 width: 42px;
             }
 
-            .footer-message {
+        }
+
+        body.blessing-active {
+            overflow: hidden;
+            background: #fff9f2;
+        }
+
+        body.blessing-active > header,
+        body.blessing-active > main {
+            visibility: hidden;
+        }
+
+        .blessing-screen {
+            position: fixed;
+            z-index: 1000;
+            inset: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr);
+            align-items: center;
+            gap: clamp(24px, 5vw, 76px);
+            overflow: auto;
+            padding: clamp(20px, 4vw, 64px);
+            background:
+                radial-gradient(ellipse at 24% 40%, rgba(255, 255, 255, .96), transparent 57%),
+                linear-gradient(125deg, #fff8ee, #f6e5d5);
+        }
+
+        .blessing-screen[hidden] {
+            display: none;
+        }
+
+        .blessing-art {
+            justify-self: end;
+            display: block;
+            width: auto;
+            height: min(92vh, 92dvh, 900px);
+            max-width: min(100%, 92dvh);
+            object-fit: contain;
+            border: 1px solid rgba(154, 103, 44, .2);
+            border-radius: clamp(18px, 3vw, 34px);
+            box-shadow: 0 22px 70px rgba(81, 39, 31, .2);
+        }
+
+        .blessing-copy {
+            max-width: 560px;
+            color: var(--maroon-dark);
+        }
+
+        .blessing-kicker {
+            margin: 0 0 15px;
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+
+        .blessing-title {
+            margin: 0 0 22px;
+            color: var(--maroon-dark);
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(38px, 5vw, 68px);
+            font-weight: 600;
+            line-height: 1.08;
+        }
+
+        .blessing-quote {
+            margin: 0 0 24px;
+            color: #6d4e4b;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: clamp(23px, 2.6vw, 36px);
+            line-height: 1.45;
+        }
+
+        .blessing-recipient {
+            margin: 0;
+            color: #8a6a54;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        @media (max-width: 760px) {
+            .blessing-screen {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(0, 1fr) auto;
+                align-content: center;
+                justify-items: center;
+                gap: 12px;
+                padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right))
+                         max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+                text-align: center;
+            }
+
+            .blessing-art {
+                justify-self: center;
+                width: auto;
+                height: min(68vh, 68dvh);
+                max-width: min(100%, 68dvh);
+            }
+
+            .blessing-copy {
+                max-width: 620px;
+                padding-bottom: 6px;
+            }
+
+            .blessing-kicker {
+                margin-bottom: 7px;
+                font-size: 10px;
+            }
+
+            .blessing-title {
+                margin-bottom: 8px;
+                font-size: clamp(30px, 8vw, 46px);
+            }
+
+            .blessing-quote {
+                margin-bottom: 8px;
+                font-size: clamp(18px, 5vw, 25px);
+            }
+
+            .blessing-recipient {
                 font-size: 12px;
             }
         }
@@ -1022,24 +1139,6 @@
 
     <main class="page-container">
 
-        <!-- CALIBRATION STATUS -->
-        <section class="instruction-banner">
-            <div class="banner-left">
-                <div class="banner-icon" aria-hidden="true">👋</div>
-                <div class="banner-copy">
-
-                    <p id="banner-subtitle">
-                        Step 1 of 4 • Voice & Gesture Calibration for Navadurga Quiz
-                    </p>
-                </div>
-            </div>
-
-            <div class="mode-badge">
-                <span class="mode-dot"></span>
-                <span id="mode-label">CALIBRATION MODE</span>
-            </div>
-        </section>
-
         <section class="dashboard">
 
             <!-- LEFT COLUMN -->
@@ -1048,29 +1147,27 @@
                 <!-- AUDIO IDENTIFICATION -->
                 <section class="panel audio-panel">
 
-                    <p class="section-kicker audio-kicker">
-                        <span aria-hidden="true">♧</span>
-                        AUDIO IDENTIFICATION
-                    </p>
+                    <div id="name-entry-screen">
+                        <p class="section-kicker audio-kicker">AUDIO IDENTIFICATION</p>
 
-                    <div class="mic-orb" id="mic-orb" aria-label="Microphone status">
-                        <svg viewBox="0 0 24 24" fill="none"
-                             stroke="currentColor" stroke-width="2"
-                             stroke-linecap="round" stroke-linejoin="round"
-                             aria-hidden="true">
-                            <rect x="9" y="2" width="6" height="12" rx="3"></rect>
-                            <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
-                            <path d="M12 19v3"></path>
-                            <path d="M8 22h8"></path>
-                            <path d="M3 3l18 18"></path>
-                        </svg>
-                    </div>
+                        <div class="mic-orb" id="mic-orb" aria-label="Microphone status">
+                            <svg viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round"
+                                 aria-hidden="true">
+                                <rect x="9" y="2" width="6" height="12" rx="3"></rect>
+                                <path d="M5 10v2a7 7 0 0 0 14 0v-2"></path>
+                                <path d="M12 19v3"></path>
+                                <path d="M8 22h8"></path>
+                                <path d="M3 3l18 18"></path>
+                            </svg>
+                        </div>
 
                     <span class="mic-caption" id="mic-caption">Off</span>
 
                     <h2 id="audio-title">Please say your name</h2>
 
-                    <p class="audio-description" id="audio-description">
+                    <p class="audio-description" id="audio-description" role="status">
                         The microphone is off. Enable it to say your name.
                     </p>
 
@@ -1084,16 +1181,15 @@
                             <path d="M12 19v3"></path>
                             <path d="M8 22h8"></path>
                         </svg>
-                        Enable microphone &amp; say your name
+                        <span id="mic-button-label">Enable microphone &amp; say your name</span>
                     </button>
 
-                    <p class="privacy-note">
+                    <p class="privacy-note" id="privacy-note">
                         Allow microphone access, then say your name.
                         Speech recognition may use your browser's online speech service.
                     </p>
 
-                    <!-- The original quiz content remains functional -->
-                    <div class="divider-label">
+                    <div class="divider-label" id="name-divider">
                         OR TYPE YOUR NAME BELOW
                     </div>
 
@@ -1112,6 +1208,7 @@
                                 name="name"
                                 placeholder="e.g. Priyanshu Sharma"
                                 autocomplete="name"
+                                required
                             >
                         </label>
 
@@ -1119,8 +1216,8 @@
                             Continue <span aria-hidden="true">→</span>
                         </button>
                     </form>
+                    </div>
 
-                    <!-- Original content hook retained -->
                     <div id="message-card" hidden aria-live="polite">
                         <p class="eyebrow" id="state-label">WELCOME</p>
                         <div id="content" class="content"></div>
@@ -1161,14 +1258,8 @@
                             alt="Mirrored live camera preview with hand landmarks and hand-zone guide"
                         >
 
-                        <!-- Original gesture hooks retained -->
-                        <div class="camera-ring" id="gesture-ring">
-                            <span id="gesture-count">✋</span>
-                        </div>
-
                         <div class="camera-guidance">
                             <div class="guide-instruction">
-                                <span aria-hidden="true">♧</span>
                                 <span id="coach">Show hand inside guide</span>
                             </div>
 
@@ -1182,50 +1273,33 @@
 
                     </div>
 
-                    <!-- GESTURE INSTRUCTIONS -->
                     <section class="gesture-panel" style="margin-top: 19px;">
-                        <h3>QUICK HAND CONTROLS</h3>
+                        <h3>USE FINGERS TO CHOOSE A QUIZ OPTION</h3>
 
                         <div class="gesture-grid">
 
                             <div class="gesture-item">
                                 <span class="gesture-number">1</span>
-                                <span>Raise 1 finger to pick A</span>
+                                <span>1 finger: Option A</span>
                             </div>
 
                             <div class="gesture-item">
                                 <span class="gesture-number">2</span>
-                                <span>Raise 2 fingers for B</span>
+                                <span>2 fingers: Option B</span>
                             </div>
 
                             <div class="gesture-item">
-                                <span class="gesture-emoji">✋</span>
-                                <span>Open palm confirms</span>
+                                <span class="gesture-number">3</span>
+                                <span>3 fingers: Option C</span>
                             </div>
 
                             <div class="gesture-item">
-                                <span class="gesture-emoji">✊</span>
-                                <span>Closed fist repeats</span>
+                                <span class="gesture-number">4</span>
+                                <span>4 fingers: Option D</span>
                             </div>
 
                         </div>
                     </section>
-
-                    <div class="camera-bottom">
-                        <span class="privacy-indicator">
-                            <span aria-hidden="true">♙</span>
-                            Processed locally on your device
-                        </span>
-
-                        <a class="settings-link" href="#gesture-settings"
-                           id="gesture-settings-link">
-                            Gesture Settings
-                        </a>
-                    </div>
-
-                    <div id="gesture-settings" hidden>
-                        <!-- Add existing gesture settings here if available -->
-                    </div>
 
                 </section>
 
@@ -1238,27 +1312,17 @@
 
         </section>
 
-        <!-- MAIN FOOTER -->
-        <footer class="main-footer">
-            <div class="footer-message">
-                <span class="footer-hand" aria-hidden="true">♧</span>
-                <span>Show your hands in the frame</span>
-                <span class="footer-star">✦</span>
-                <span>Hands-free • Joyful • Learn together</span>
-            </div>
-
-            <div class="footer-series">
-                <span>Saraswati Puja Interactive Series</span>
-                <a class="back-to-top" href="#top" aria-label="Back to top">↑</a>
-            </div>
-        </footer>
-
     </main>
 
-    <footer class="legal-footer">
-        <span>♧ &nbsp; Show your hands in frame • Hands-free • Joyful • Learn together</span>
-        <span>Navadurga Festivity Celebration &nbsp; • &nbsp; © 2025 Saraswati Puja Cultural Foundation. All rights reserved.</span>
-    </footer>
+    <section id="blessing-screen" class="blessing-screen" hidden aria-live="polite" aria-label="Goddess blessing">
+        <img id="blessing-art" class="blessing-art" alt="">
+        <div class="blessing-copy">
+            <p class="blessing-kicker">A blessing for you</p>
+            <h1 id="blessing-title" class="blessing-title"></h1>
+            <p id="blessing-quote" class="blessing-quote"></p>
+            <p id="blessing-recipient" class="blessing-recipient"></p>
+        </div>
+    </section>
 
     <!-- Preserve the existing server-side template flag -->
     <script>

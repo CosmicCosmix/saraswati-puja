@@ -51,6 +51,7 @@ def configure_runtime(quiz_state, camera_worker) -> None:
     state.set_settings_changed(camera.configure)
     state.set_question_changed(camera.reset_locks)
     state.set_gesture_reset(camera.reset_locks)
+    state.set_namaste_reset(camera.reset_namaste_lock)
 
 
 def require_admin(credentials: HTTPBasicCredentials = Depends(security)) -> str:
@@ -124,9 +125,6 @@ async def video() -> StreamingResponse:
             frame = camera.latest_jpeg if camera else None
             if frame is None:
                 placeholder = __import__("numpy").zeros((360, 640, 3), dtype="uint8")
-                cv2.rectangle(placeholder, (115, 36), (525, 324), (0, 150, 230), 2)
-                cv2.putText(placeholder, camera.status if camera else "Camera starting", (45, 190),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.65, (240, 220, 195), 2)
                 frame = cv2.imencode(".jpg", placeholder)[1].tobytes()
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
             __import__("time").sleep(1 / 15)

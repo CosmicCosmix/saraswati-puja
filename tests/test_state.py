@@ -15,6 +15,8 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     assert state.state == "NAME"
     assert state.accept_name("Test Visitor") == "Test Visitor"
     state.handle_gesture("count", count=1)
+    assert state.state == "READY"
+    state.handle_gesture("count", count=1)
     assert state.state == "QUESTION"
     for _ in range(5):
         current = state.questions[state.question_index]
@@ -32,11 +34,30 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     state.handle_gesture("namaste")
     assert state.state == "BLESSING"
     assert state.payload["name"] == "Test Visitor"
+    assert state.payload["image"].startswith("/goddess/")
+    assert state.payload["slogan"]
     state.tick(state.deadline + 0.01)
     assert state.state == "NAME"
 
 
-def test_name_confirmation_starts_quiz_and_two_fingers_restarts_name_capture(isolated_db):
+def test_prayer_entry_rearms_namaste_detection(isolated_db):
+    state = QuizState(simulate=True)
+    state.state = "RESULTS"
+    state.deadline = time.monotonic() - 1
+    reset_count = 0
+
+    def reset_namaste_lock():
+        nonlocal reset_count
+        reset_count += 1
+
+    state.set_namaste_reset(reset_namaste_lock)
+    state.tick()
+
+    assert state.state == "PRAYER"
+    assert reset_count == 1
+
+
+def test_name_confirmation_requires_ready_gesture_to_start(isolated_db):
     state = QuizState(simulate=True)
     state.accept_name("Test Visitor")
     state.handle_gesture("count", count=2)
@@ -48,8 +69,24 @@ def test_name_confirmation_starts_quiz_and_two_fingers_restarts_name_capture(iso
     state.accept_name("Test Visitor")
     state.handle_gesture("count", count=1)
 
+    assert state.state == "READY"
+    assert "Ready to take the quiz" in state.payload["prompt"]
+    state.handle_gesture("count", count=1)
     assert state.state == "QUESTION"
     assert state.payload["number"] == 1
+
+
+def test_declining_ready_prompt_returns_to_name_capture(isolated_db):
+    state = QuizState(simulate=True)
+    state.accept_name("Test Visitor")
+    state.handle_gesture("count", count=1)
+    assert state.state == "READY"
+
+    state.handle_gesture("count", count=2)
+
+    assert state.state == "NAME"
+    assert state.player == ""
+    assert state.payload["prompt"] == "Please say your name"
 
 
 def test_name_gesture_callback_publishes_release_guidance_and_retries_reset_lock(isolated_db):

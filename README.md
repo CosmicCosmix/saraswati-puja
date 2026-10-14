@@ -5,8 +5,8 @@ A local, hands-free quiz kiosk for the nine Navadurga forms. FastAPI serves the 
 ## Requirements
 
 - Python 3.11 for physical hand recognition. This project uses MediaPipe's legacy Hands API and pins a compatible release; newer MediaPipe versions removed that API. If recognition dependencies are missing, the kiosk displays the camera status and the reason.
-- A webcam and microphone. On the name screen, select **Enable microphone & say your name** and allow microphone access in the browser prompt. The recognized name is shown for confirmation; show 1 finger to start or 2 fingers to say it again.
-- Speech recognition requires a browser with the Web Speech API (Chrome or Edge recommended) and may require internet access. The browser processes audio for speech recognition; only the recognized name text is sent to the kiosk server.
+- A webcam and microphone. On the name screen, select **Enable microphone & say your name** and allow microphone access in the browser prompt. The recognized name is shown for confirmation; show 1 finger to confirm, then 1 finger again to start the quiz. Show 2 fingers to retry your name or decline the quiz.
+- Speech recognition requires a browser with the Web Speech API (Chrome or Edge recommended) and may require internet access. The kiosk submits finalized speech immediately and can use a stable interim transcript if the browser delays its final result. The browser processes audio for speech recognition; only recognized name text is sent to the kiosk server.
 
 ## Setup and run — Windows PowerShell
 
@@ -45,7 +45,7 @@ Open the same kiosk and display URLs in a supported browser. Grant microphone pe
 
 Run `python run.py --simulate` when no camera or microphone is available. The gesture and microphone workers are replaced by volunteer test controls, while the UI still runs through the same server-side state machine.
 
-- The kiosk starts by asking for a spoken name. Show 1 finger to confirm and start the quiz, or 2 fingers to say the name again. After five questions, the kiosk returns to name capture for the next player.
+- The kiosk starts by asking for a spoken name. Show 1 finger to confirm the name, then 1 finger again at the ready prompt to start. Show 2 fingers to retry the name or decline the quiz. During questions, 1–4 fingers select options A–D. After five questions, the kiosk returns to name capture for the next player.
 - Kiosk volunteer hotkeys: `1`–`4` answer/confirm; `P` simulates namaste; `N` skips the current question; `Esc` returns to name capture.
 - The typed-name test endpoint is `POST /api/dev/name` with JSON such as `{"name":"Asha Rao"}`. Use `POST /api/dev/action` with `{"action":"1"}`, `{"action":"namaste"}`, `{"action":"skip"}` or `{"action":"reset"}` for deterministic driving. These endpoints return 404 unless simulation mode is active.
 - Simulation volunteers can pause/resume automatic state timers with `{"action":"pause"}` / `{"action":"resume"}` while taking screenshots; this does not exist in physical mode.
@@ -61,7 +61,7 @@ Run `python run.py --simulate` when no camera or microphone is available. The ge
 
 The default database is `data/kiosk.db` (SQLite WAL). Quiz results, settings, blessing logs, and timeout events remain local across restarts. Configure `DATABASE_URL` to use a different SQLAlchemy database URL if needed. Camera frames are processed in memory and exposed only as the local MJPEG preview. Speech recognition runs through the browser's Web Speech service, which may process audio outside this app; only the recognized name text is sent to this server. The app does not record or store microphone audio.
 
-The admin panel at `/admin` edits confidence (0.65 default), hold duration (600 ms), vote window (8 frames), namaste distance ratio (0.35), question/prayer/blessing timers, idle reset, question and slogan data, sound, leaderboard visibility/reset, and recent sessions/timeouts.
+The admin panel at `/admin` edits confidence (0.65 default), finger-gesture hold duration (600 ms), vote window (8 frames), namaste distance ratio (0.35), question/prayer/blessing timers, idle reset, question and slogan data, sound, leaderboard visibility/reset, and recent sessions/timeouts. Namaste uses a separate fast confirmation window so the blessing appears as soon as joined hands are detected.
 
 ## Run tests
 

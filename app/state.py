@@ -60,6 +60,7 @@ class QuizState:
         self._settings_changed = None
         self._question_changed = None
         self._gesture_reset = None
+        self._namaste_reset = None
         self._timers_paused_at: float | None = None
         self._leaderboard: list[dict[str, Any]] = []
         self.gesture = {
@@ -164,6 +165,8 @@ class QuizState:
                 self._timeout("question_timeout")
                 self._record_answer(None, timed_out=True)
             elif self.state == "RESULTS" and self.deadline is not None and now >= self.deadline:
+                if self._namaste_reset:
+                    self._namaste_reset()
                 self.state = "PRAYER"
                 self.payload = {"name": self.player, "prompt": "Take a moment. Join your hands in prayer to receive a blessing."}
                 self.deadline = now + float(self.settings["prayer_seconds"])
@@ -186,6 +189,9 @@ class QuizState:
 
     def set_gesture_reset(self, callback) -> None:
         self._gesture_reset = callback
+
+    def set_namaste_reset(self, callback) -> None:
+        self._namaste_reset = callback
 
     def _timeout(self, reason: str) -> None:
         self.timeout_count += 1
@@ -214,6 +220,11 @@ class QuizState:
                 if self.state == "NAME" and locked:
                     if count == 1:
                         self._confirm_name()
+                    elif count == 2:
+                        self._retry_name()
+                elif self.state == "READY" and locked:
+                    if count == 1:
+                        self._show_question()
                     elif count == 2:
                         self._retry_name()
                 elif self.state == "QUESTION" and locked and count in (1, 2, 3, 4):
@@ -250,12 +261,22 @@ class QuizState:
     def _retry_name(self) -> None:
         if self._gesture_reset:
             self._gesture_reset()
+        self.state = "NAME"
         self.player = ""
         self.payload = {"prompt": "Please say your name"}
 
     def _confirm_name(self) -> None:
         if self.player:
-            self._show_question()
+            if self._gesture_reset:
+                self._gesture_reset()
+            self.state = "READY"
+            self.payload = {
+                "name": self.player,
+                "prompt": f"Ready to take the quiz, {self.player}?",
+                "start_with": "1 finger = start, 2 fingers = decline",
+            }
+            self.last_activity = time.monotonic()
+            self._publish()
 
     def _choose_questions(self) -> list[dict[str, Any]]:
         questions = [q for q in load_json("questions.json") if q.get("active", True)]

@@ -1,9 +1,21 @@
 (() => {
   const content = document.getElementById("content");
   const label = document.getElementById("state-label");
-  const ring = document.getElementById("gesture-ring");
-  const countIcon = document.getElementById("gesture-count");
+  const nameEntryScreen = document.getElementById("name-entry-screen");
+  const messageCard = document.getElementById("message-card");
+  const audioTitle = document.getElementById("audio-title");
+  const audioDescription = document.getElementById("audio-description");
+  const micOrb = document.getElementById("mic-orb");
+  const micCaption = document.getElementById("mic-caption");
+  const micButton = document.getElementById("mic-button");
+  const nameForm = document.getElementById("name-form");
   const coach = document.getElementById("coach");
+  const confidenceFill = document.querySelector(".confidence-fill");
+  const blessingScreen = document.getElementById("blessing-screen");
+  const blessingArt = document.getElementById("blessing-art");
+  const blessingTitle = document.getElementById("blessing-title");
+  const blessingQuote = document.getElementById("blessing-quote");
+  const blessingRecipient = document.getElementById("blessing-recipient");
   let previousState = "";
   let previousView = "";
   let soundEnabled = true;
@@ -17,12 +29,14 @@
   let micStatusText = "";
   let micErrorText = "";
   let microphonePermissionGranted = false;
+  let interimNameTimer = null;
+  let interimNameText = "";
 
   function updateMicStatus(message, isError = false) {
     micStatusText = isError ? "" : message;
     micErrorText = isError ? message : "";
-    const status = document.getElementById("voice-status");
-    const button = document.getElementById("mic-start");
+    const status = document.getElementById("voice-status") || audioDescription;
+    const button = document.getElementById("mic-start") || micButton;
     if (status) {
       status.textContent = message;
       status.setAttribute("role", isError ? "alert" : "status");
@@ -33,6 +47,9 @@
   function stopSpeechRecognition() {
     speechRecognitionRequested = false;
     namePostPending = false;
+    window.clearTimeout(interimNameTimer);
+    interimNameTimer = null;
+    interimNameText = "";
     if (speechRecognitionActive && speechRecognition) speechRecognition.stop();
     speechRecognitionActive = false;
   }
@@ -88,23 +105,45 @@
     speechRecognition = recognition;
     recognition.lang = "en-IN";
     recognition.continuous = true;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.onstart = () => {
       speechRecognitionActive = true;
+      micOrb.classList.add("listening");
+      micCaption.textContent = "Listening";
       updateMicStatus("Microphone on. Speak your name clearly.");
-      const button = document.getElementById("mic-start");
+      const button = document.getElementById("mic-start") || micButton;
+      const buttonLabel = document.getElementById("mic-button-label");
       if (button) {
         button.disabled = true;
-        button.textContent = "Microphone on — say your name";
+        if (buttonLabel) buttonLabel.textContent = "Microphone on — say your name";
+        else button.textContent = "Microphone on — say your name";
       }
     };
     recognition.onresult = event => {
+      let finalTranscript = "";
+      let interimTranscript = "";
       for (let index = event.resultIndex; index < event.results.length; index += 1) {
         const result = event.results[index];
         if (result.isFinal && result[0]?.transcript.trim()) {
-          submitRecognizedName(result[0].transcript.trim());
-          break;
+          finalTranscript = result[0].transcript.trim();
+        } else if (result[0]?.transcript.trim()) {
+          interimTranscript = result[0].transcript.trim();
         }
+      }
+      if (finalTranscript) {
+        window.clearTimeout(interimNameTimer);
+        interimNameTimer = null;
+        interimNameText = "";
+        submitRecognizedName(finalTranscript);
+      } else if (interimTranscript) {
+        interimNameText = interimTranscript;
+        updateMicStatus(`Listening: ${interimTranscript}`);
+        window.clearTimeout(interimNameTimer);
+        interimNameTimer = window.setTimeout(() => {
+          if (interimNameText && currentSnapshot?.state === "NAME" && !currentSnapshot.payload?.name) {
+            submitRecognizedName(interimNameText);
+          }
+        }, 700);
       }
     };
     recognition.onerror = event => {
@@ -112,7 +151,7 @@
         "not-allowed": "Microphone permission is blocked. Allow it for this site, then try again.",
         "service-not-allowed": "The browser speech service is blocked. Check browser settings or try Chrome/Edge.",
         "audio-capture": "No working microphone was found. Check the microphone connection and Windows input settings.",
-        network: "The browser speech service needs an internet connection. Check the connection and try again.",
+        network: "The browser speech service could not be reached. Check the internet connection or type your name below.",
         "no-speech": "I didn't hear speech. Say your name clearly after the microphone is ready.",
         "language-not-supported": "The browser does not support English (India) speech recognition."
       };
@@ -122,11 +161,15 @@
     };
     recognition.onend = () => {
       speechRecognitionActive = false;
+      micOrb.classList.remove("listening");
+      micCaption.textContent = "Off";
       if (!speechRecognitionRequested || currentSnapshot?.state !== "NAME") {
-        const button = document.getElementById("mic-start");
+        const button = document.getElementById("mic-start") || micButton;
+        const buttonLabel = document.getElementById("mic-button-label");
         if (button) {
           button.disabled = false;
-          button.textContent = "Enable microphone & say your name";
+          if (buttonLabel) buttonLabel.textContent = "Enable microphone & say your name";
+          else button.textContent = "Enable microphone & say your name";
         }
         return;
       }
@@ -197,10 +240,31 @@
     content.innerHTML = html;
   }
 
+  function renderAnswerCards(options, selected = null, correctIndex = null, showResult = false) {
+    const letters = ["A", "B", "C", "D"];
+    return options.map((option, index) => {
+      const isSelected = index === selected;
+      const isCorrect = showResult && index === correctIndex;
+      const classes = ["answer-card", isSelected ? "selected" : "", isCorrect ? "correct" : ""].filter(Boolean).join(" ");
+      const marker = isSelected || isCorrect ? '<span class="answer-check" aria-label="Selected">✓</span>' : "";
+      return `<div class="${classes}">
+        <div class="answer-card-heading">
+          <span class="answer-letter">${letters[index]}</span>
+          <span class="answer-copy">${escapeHtml(option)}</span>
+          ${marker}
+        </div>
+        <span class="answer-hint"><span>Show “${letters[index]}”</span><span>${index + 1} ${index === 0 ? "finger" : "fingers"}</span></span>
+      </div>`;
+    }).join("");
+  }
+
   function render(state) {
     const {state: mode, payload = {}, gesture = {}} = state;
     const previousSnapshot = currentSnapshot;
     currentSnapshot = state;
+    const showBlessing = mode === "BLESSING";
+    blessingScreen.hidden = !showBlessing;
+    document.body.classList.toggle("blessing-active", showBlessing);
     if (mode !== "NAME") stopSpeechRecognition();
     else if (previousSnapshot?.state === "NAME" && previousSnapshot.payload?.name && !payload.name) {
       namePostPending = false;
@@ -219,21 +283,21 @@
       previousState = mode;
     }
     const progress = Math.max(0, Math.min(1, Number(gesture.progress) || 0));
-    ring.style.setProperty("--progress", `${progress * 100}%`);
-    ring.style.opacity = mode === "IDLE" || mode === "QUESTION" || mode === "NAME" || mode === "PRAYER" ? ".95" : ".45";
+    confidenceFill.style.width = `${Math.max(0, Math.min(1, Number(gesture.confidence) || 0)) * 100}%`;
     const fingerValue = gesture.value;
-    countIcon.textContent = fingerValue === "namaste" ? "🙏" : fingerValue === 5 ? "✋" : Number.isInteger(fingerValue) ? `${fingerValue} ☝` : "✋";
     if (mode === "IDLE") coach.textContent = "Say your name to begin";
     else if (gesture.awaiting_release) coach.textContent = mode === "NAME"
       ? payload.name
         ? "Lower your hand briefly, then show 1 finger to confirm or 2 to retry"
         : "Lower your hand briefly, then show it again"
+      : mode === "READY"
+      ? "Lower your hand briefly, then show 1 finger to start or 2 to decline"
       : "Lower your hand briefly, then show your answer again";
-    else if (mode === "NAME") coach.textContent = speechRecognitionActive
-      ? "Microphone on — say your name"
-      : payload.name
-      ? "Show 1 finger to confirm, or 2 to say it again"
-      : "Enable the microphone and say your name";
+    else if (mode === "NAME") coach.textContent = payload.name
+      ? "1 finger confirms your name; 2 fingers let you retry"
+      : "Show one hand clearly inside the guide";
+    else if (mode === "READY") coach.textContent = "1 finger to start the quiz; 2 fingers to decline";
+    else if (mode === "QUESTION") coach.textContent = "Use 1–4 fingers to choose options A–D";
     else if (Number.isInteger(fingerValue)) coach.textContent = fingerValue === 5
       ? "5 fingers detected — hold steady"
       : `${fingerValue} finger${fingerValue === 1 ? "" : "s"} detected — hold steady`;
@@ -242,40 +306,73 @@
     else if (progress > 0 && progress < 1) coach.textContent = "Hold still";
     else coach.textContent = "Move closer or show your hands clearly";
 
-    const stateLabels = {IDLE:"YOUR NAME", NAME:"YOUR NAME", QUESTION:"QUESTION", FEEDBACK:"YOUR ANSWER", RESULTS:"YOUR SCORE", PRAYER:"A MOMENT OF PEACE", BLESSING:"A BLESSING FOR YOU"};
+    const isNameScreen = mode === "NAME";
+    nameEntryScreen.hidden = !isNameScreen;
+    messageCard.hidden = isNameScreen;
+    if (isNameScreen) {
+      const hasName = Boolean(payload.name);
+      audioTitle.textContent = payload.prompt || "Please say your name";
+      audioDescription.textContent = hasName
+        ? `I heard ${payload.name}. Show 1 finger to confirm, or 2 fingers to say your name again.`
+        : micErrorText || micStatusText || "The microphone is off. Enable it to say your name.";
+      micButton.hidden = hasName || window.KIOSK_SIMULATE;
+      nameForm.hidden = hasName;
+      document.getElementById("privacy-note").hidden = hasName;
+      document.getElementById("name-divider").hidden = hasName;
+      if (!speechRecognitionActive) document.getElementById("mic-button-label").textContent = "Enable microphone & say your name";
+    }
+
+    const stateLabels = {IDLE:"YOUR NAME", NAME:"YOUR NAME", READY:"READY TO PLAY", QUESTION:"QUESTION", FEEDBACK:"YOUR ANSWER", RESULTS:"YOUR SCORE", PRAYER:"A MOMENT OF PEACE", BLESSING:"A BLESSING FOR YOU"};
     label.textContent = stateLabels[mode] || mode;
     const signature = `${mode}:${JSON.stringify(payload)}`;
     if (signature === previousView) return;
     previousView = signature;
+    if (mode === "NAME") return;
     if (mode === "IDLE") {
       setContent('<h2>Welcome, seeker of wisdom</h2><p>Say your name to begin your Navadurga quiz.</p><div class="gesture-help">🎙️ &nbsp; Speak your name</div>');
-    } else if (mode === "NAME") {
-      const message = window.KIOSK_SIMULATE
-        ? '<p id="voice-status" class="feedback-reason" role="status">Microphone capture is disabled in simulation. Run the app normally to use the microphone.</p>'
-        : `<p id="voice-status" class="voice-status" role="${micErrorText ? "alert" : "status"}">${escapeHtml(payload.name ? `I heard ${payload.name}. Show 1 finger to confirm, or 2 to say it again.` : micErrorText || micStatusText || "The microphone is off. Enable it to say your name.")}</p>`;
-      const startButton = window.KIOSK_SIMULATE ? "" : `<button class="mic-retry" id="mic-start" type="button"${speechRecognitionActive ? " disabled" : ""}>${speechRecognitionActive ? "Microphone on — say your name" : "Enable microphone & say your name"}</button>`;
-      setContent(`<div class="microphone-icon" aria-hidden="true">${speechRecognitionActive ? "🔴" : "🎙️"}</div><h2>${escapeHtml(payload.prompt || "Please say your name")}</h2>${message}${startButton}<p class="gesture-help">${window.KIOSK_SIMULATE ? "Use the simulation test endpoint to provide a test name." : payload.name ? "Show 1 finger to confirm and start, or 2 fingers to say your name again" : "Allow microphone access, then say your name. Speech recognition may use your browser's online speech service."}</p>`);
+    } else if (mode === "READY") {
+      setContent(`<h2>${escapeHtml(payload.prompt || "Ready to take the quiz?")}</h2><p class="gesture-help">Show 1 finger to start, or 2 fingers to decline.</p>`);
     } else if (mode === "QUESTION") {
       const seconds = Number(payload.seconds) || 20;
-      const options = (payload.options || []).map((option, index) => `<div class="option"><span class="number">${index + 1}</span>${escapeHtml(option)}</div>`).join("");
-      setContent(`<p class="timer">Question ${payload.number} of ${payload.total} &nbsp; • &nbsp; ${escapeHtml(payload.difficulty)}</p><div class="countdown-ring" id="countdown-ring" data-duration="${seconds}" data-ends="${payload.ends_at || ""}" style="--timer-progress:100%"><span>${seconds}</span></div><p class="question">${escapeHtml(payload.question)}</p><div class="options">${options}</div><p class="timer">Raise 1–4 fingers</p>`);
+      const options = renderAnswerCards(payload.options || []);
+      setContent(`<div class="question-view">
+        <div class="question-topline"><span>QUESTION ${payload.number} OF ${payload.total}</span><span class="question-difficulty">${escapeHtml(payload.difficulty || "")}</span></div>
+        <div class="question-timer countdown-ring" id="countdown-ring" data-duration="${seconds}" data-ends="${payload.ends_at || ""}" style="--timer-progress:100%"><span>${seconds}</span></div>
+        <h2 class="question-title">${escapeHtml(payload.question)}</h2>
+        <span class="question-accent" aria-hidden="true"></span>
+        <div class="answer-grid">${options}</div>
+        <p class="question-instruction">Use 1–4 fingers to choose an option</p>
+      </div>`);
     } else if (mode === "FEEDBACK") {
-      const selected = payload.selected;
-      const options = (payload.options || []).map((option, index) => {
-        const classes = ["option", index === selected ? "selected" : "", payload.feedback_phase === "feedback" && index === payload.correct_index ? "correct" : ""].filter(Boolean).join(" ");
-        return `<div class="${classes}"><span class="number">${index + 1}</span>${escapeHtml(option)}</div>`;
-      }).join("");
+      const showResult = payload.feedback_phase === "feedback";
+      const options = renderAnswerCards(payload.options || [], payload.selected, payload.correct_index, showResult);
       if (payload.feedback_phase === "select") {
-        setContent(`<h2>Your answer</h2><p class="question">${escapeHtml((payload.options || [])[selected] || "")}</p><div class="options">${options}</div>`);
+        setContent(`<div class="question-view">
+          <div class="question-topline"><span>YOUR ANSWER</span><span class="question-difficulty">${escapeHtml(payload.difficulty || "")}</span></div>
+          <h2 class="question-title">${escapeHtml(payload.question)}</h2>
+          <span class="question-accent" aria-hidden="true"></span>
+          <div class="answer-grid">${options}</div>
+        </div>`);
       } else {
-        setContent(`<h2>${escapeHtml(payload.message || "Not quite")}</h2><p>${payload.correct ? `+${payload.points} points` : "The correct answer is highlighted."}</p><div class="options">${options}</div><p class="feedback-reason">${escapeHtml(payload.reason || "")}</p>`);
+        setContent(`<div class="question-view">
+          <div class="question-topline"><span>${payload.correct ? "CORRECT ANSWER" : "ANSWER REVIEW"}</span><span class="question-difficulty">${escapeHtml(payload.difficulty || "")}</span></div>
+          <h2 class="question-title">${escapeHtml(payload.question)}</h2>
+          <span class="question-accent" aria-hidden="true"></span>
+          <div class="answer-grid">${options}</div>
+          <p class="answer-result">${escapeHtml(payload.message || "Not quite")} · ${payload.correct ? `+${Number(payload.points) || 0} points` : "The correct answer is highlighted."}</p>
+          <p class="feedback-reason">${escapeHtml(payload.reason || "")}</p>
+        </div>`);
       }
     } else if (mode === "RESULTS") {
       setContent(`<h2>Well done, ${escapeHtml(payload.name)}!</h2><p class="result-score">${Number(payload.score) || 0} points</p><p>${escapeHtml(payload.prompt || "")}</p><p>Your score is now on the community leaderboard.</p>`);
     } else if (mode === "PRAYER") {
       setContent(`<div class="prayer-hands">🙏</div><h2>Take a moment</h2><p>${escapeHtml(payload.prompt || "Join your hands in prayer to receive a blessing.")}</p>`);
     } else if (mode === "BLESSING") {
-      setContent(`<img class="blessing-image" src="${escapeHtml(payload.image)}" alt="${escapeHtml(payload.goddess)}"><h2>${escapeHtml(payload.goddess)}</h2><p class="blessing-slogan">${escapeHtml(payload.slogan)}</p><p>${escapeHtml(payload.prompt)}</p><p class="gesture-help">Thank you for celebrating with us</p>`);
+      blessingArt.src = payload.image;
+      blessingArt.alt = `Illustration of Goddess ${payload.goddess}`;
+      blessingTitle.textContent = payload.goddess || "A blessing for you";
+      blessingQuote.textContent = payload.slogan || "";
+      blessingRecipient.textContent = payload.prompt || "";
     }
   }
 
@@ -319,12 +416,17 @@
       if (!response.ok) console.warn("Volunteer hotkey was not accepted", response.status);
     } catch (error) { console.error("Volunteer action failed", error); }
   }
-  content.addEventListener("click", async event => {
-    if (event.target.id !== "mic-start") return;
-    const button = event.target;
+  document.addEventListener("click", async event => {
+    const button = event.target.closest("#mic-button, #mic-start");
+    if (!button) return;
     button.disabled = true;
     await startSpeechRecognition();
     if (!speechRecognitionActive) button.disabled = false;
+  });
+  nameForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const name = document.getElementById("name-input").value.trim();
+    if (name) submitRecognizedName(name);
   });
   document.addEventListener("keydown", event => {
     if (audioContext && audioContext.state === "suspended") audioContext.resume();
