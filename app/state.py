@@ -31,7 +31,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 }
 DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
 POST_QUIZ_ROUTE_DELAY_SECONDS = 5
-POST_QUIZ_PRAYER_SECONDS = 5
+POST_QUIZ_PRAYER_SECONDS = 15
 
 
 class QuizState:

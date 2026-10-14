@@ -69,10 +69,13 @@ def test_final_answer_shows_correct_answer_then_post_quiz_prayer(isolated_db):
     assert state.state == "PRAYER"
     assert state.payload["name"] == "Test Visitor"
     assert "Join your hands" in state.payload["prompt"]
+    assert state.payload["seconds"] == 15
     assert pipeline_states == [False]
-    assert 4.99 <= state.deadline - prayer_started <= 5
+    assert 14.99 <= state.deadline - prayer_started <= 15
 
     state.handle_gesture("count", count=1, locked=True)
+    assert state.state == "PRAYER"
+    state.tick(state.deadline - 0.01)
     assert state.state == "PRAYER"
     state.tick(state.deadline + 0.01)
     assert state.state == "BLESSING"
