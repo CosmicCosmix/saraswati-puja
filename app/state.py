@@ -31,7 +31,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 }
 DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
 POST_QUIZ_ROUTE_DELAY_SECONDS = 5
-POST_QUIZ_PRAYER_SECONDS = 15
+POST_QUIZ_PRAYER_SECONDS = 10
 
 
 class QuizState:
@@ -179,6 +179,7 @@ class QuizState:
                 self._reveal_blessing()
             elif self.state == "BLESSING" and self.deadline is not None and now >= self.deadline:
                 self.reset()
+
     def set_settings_changed(self, callback) -> None:
         self._settings_changed = callback
 
@@ -383,126 +384,3 @@ class QuizState:
         if not self.player:
             raise RuntimeError("Cannot save a quiz without a confirmed player name.")
         score = sum(answer["points"] for answer in self.answers)
-        answer_time = sum(answer["elapsed"] for answer in self.answers)
-        with SessionLocal() as db:
-            entry = QuizSession(name=self.player, score=score, answer_time=answer_time, finished_at=datetime.now(timezone.utc))
-            db.add(entry)
-            db.commit()
-            self.leaderboard_id = entry.id
-            rows = self._leaderboard_rows(db)
-            self._leaderboard = rows[:10]
-            self.player_rank = next((i + 1 for i, row in enumerate(rows) if row["id"] == entry.id), len(rows))
-        self.state = "RESULTS"
-        self.payload = {"name": self.player, "score": score, "rank": self.player_rank, "prompt": f"You are #{self.player_rank}"}
-        self.deadline = time.monotonic() + 7
-        self.last_activity = time.monotonic()
-
-    def _enter_prayer(self, now: float | None = None) -> None:
-        if self._namaste_reset:
-            self._namaste_reset()
-        if self._gesture_reset:
-            self._gesture_reset()
-        self._set_gesture_pipeline_enabled(False)
-        self.state = "PRAYER"
-        self.payload = {
-            "name": self.player,
-            "prompt": "Join your hands in prayer. A blessing will appear shortly.",
-            "seconds": POST_QUIZ_PRAYER_SECONDS,
-            "ends_at": time.time() + POST_QUIZ_PRAYER_SECONDS,
-        }
-        self.deadline = (time.monotonic() if now is None else now) + POST_QUIZ_PRAYER_SECONDS
-        self.feedback_deadline = None
-        self.last_activity = time.monotonic() if now is None else now
-        self._publish()
-
-    def _reveal_blessing(self) -> None:
-        if self.state != "PRAYER":
-            return
-        goddess, slogan = self.blessing_picker.pick(load_json("slogans.json"))
-        image_file = next(filename for filename, label in GODDESSES if label == goddess)
-        with SessionLocal() as db:
-            db.add(BlessingLog(player_name=self.player, goddess=goddess, slogan_id=slogan["id"]))
-            db.commit()
-        self.state = "BLESSING"
-        self.payload = {
-            "name": self.player, "goddess": goddess, "image": f"/goddess/{image_file}",
-            "slogan": slogan["text"], "prompt": f"Blessings, {self.player}",
-        }
-        self.deadline = time.monotonic() + float(self.settings["blessing_seconds"])
-        self.last_activity = time.monotonic()
-        self._publish()
-
-    def reset(self) -> None:
-        with self._lock:
-            if self._gesture_reset:
-                self._gesture_reset()
-            self._set_gesture_pipeline_enabled(True)
-            self.state = "NAME"
-            self.timers_paused = False
-            self.payload = {"prompt": "Please say your name"}
-            self.deadline = None
-            self.feedback_deadline = None
-            self.questions = []
-            self.answers = []
-            self.player = ""
-            self.selected_answer = None
-            self.gesture = {
-                "value": None, "confidence": 0.0, "progress": 0.0,
-                "locked": False, "awaiting_release": False,
-            }
-            self.last_activity = time.monotonic()
-            self._publish()
-            logger.info("Kiosk reset; ready to capture the next player's name")
-
-    def skip_question(self) -> None:
-        with self._lock:
-            if self.state == "QUESTION":
-                self._timeout("volunteer_skip")
-                self._record_answer(None, timed_out=True)
-                self.last_activity = time.monotonic()
-                self._publish()
-
-    def _leaderboard_rows(self, db) -> list[dict[str, Any]]:
-        entries = db.scalars(select(QuizSession).where(QuizSession.hidden.is_(False))).all()
-        return leaderboard_order([
-            {"id": item.id, "name": item.name, "score": item.score, "answer_time": item.answer_time,
-             "finished_at": item.finished_at.isoformat()} for item in entries
-            if item.name.strip() and not re.fullmatch(r"Devotee \d+", item.name)
-        ])
-
-    def get_leaderboard_from_db(self) -> list[dict[str, Any]]:
-        with SessionLocal() as db:
-            return self._leaderboard_rows(db)[:10]
-
-    def get_leaderboard(self) -> list[dict[str, Any]]:
-        with self._lock:
-            return list(self._leaderboard)
-
-    def set_settings(self, values: dict[str, Any]) -> None:
-        with self._lock, SessionLocal() as db:
-            for key, value in values.items():
-                if key not in DEFAULT_SETTINGS:
-                    raise ValueError(f"Unknown setting: {key}")
-                if isinstance(DEFAULT_SETTINGS[key], bool):
-                    if not isinstance(value, bool):
-                        raise ValueError(f"{key} must be a boolean")
-                else:
-                    value = float(value)
-                    if value <= 0:
-                        raise ValueError(f"{key} must be positive")
-                    if key in {"confidence_threshold", "namaste_distance"} and value > 1:
-                        raise ValueError(f"{key} must not exceed 1")
-                    if key == "hold_ms" and value > 5000:
-                        raise ValueError("hold_ms must not exceed 5000")
-                    if key == "vote_frames":
-                        if not value.is_integer() or value > 120:
-                            raise ValueError("vote_frames must be a whole number no greater than 120")
-                        value = int(value)
-                    if key.endswith("_seconds") and value > 3600:
-                        raise ValueError(f"{key} must not exceed 3600")
-                db.merge(AppSetting(key=key, value=json.dumps(value)))
-                self.settings[key] = value
-            db.commit()
-            if self._settings_changed:
-                self._settings_changed(self.settings)
-            self._publish()
