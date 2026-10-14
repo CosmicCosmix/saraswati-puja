@@ -25,18 +25,22 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
         state.tick(state.feedback_deadline + 0.01)
         assert state.state == "FEEDBACK"
         state.tick(state.feedback_deadline + 4.01)
-    assert state.state == "BLESSING"
+        prayer_started = time.monotonic()
+    assert state.state == "PRAYER"
     assert len(state.answers) == 5
     assert state.get_leaderboard()[0]["score"] == sum(answer["points"] for answer in state.answers)
     assert state.get_leaderboard()[0]["name"] == "Test Visitor"
     assert state.payload["name"] == "Test Visitor"
+    assert "Join your hands" in state.payload["prompt"]
+    state.tick(state.deadline + 0.01)
+    assert state.state == "BLESSING"
     assert state.payload["image"].startswith("/goddess/")
     assert state.payload["slogan"]
     state.tick(state.deadline + 0.01)
     assert state.state == "NAME"
 
 
-def test_final_answer_starts_five_second_blessing_countdown(isolated_db):
+def test_final_answer_shows_correct_answer_then_ten_second_prayer(isolated_db):
     state = QuizState(simulate=True)
     state.state = "QUESTION"
     state.player = "Test Visitor"
@@ -47,19 +51,29 @@ def test_final_answer_starts_five_second_blessing_countdown(isolated_db):
         "reason": "Test explanation",
     }]
     state.answer_started = time.monotonic()
-    answered_at = time.monotonic()
+    pipeline_states = []
+    state.set_gesture_pipeline(pipeline_states.append)
 
-    state._record_answer(0, timed_out=False)
+    state._select_answer(0)
+    state.tick(state.feedback_deadline + 0.01)
 
-    deadline = state.post_quiz_blessing_deadline
-    assert deadline is not None
-    assert 4.99 <= deadline - answered_at <= 5.01
     assert state.state == "FEEDBACK"
+    assert state.payload["feedback_phase"] == "feedback"
+    assert state.payload["correct_index"] == 0
 
-    state.tick(deadline)
+    state.tick(state.feedback_deadline + 4.01)
+    prayer_started = time.monotonic()
 
-    assert state.state == "BLESSING"
+    assert state.state == "PRAYER"
     assert state.payload["name"] == "Test Visitor"
+    assert "Join your hands" in state.payload["prompt"]
+    assert pipeline_states == [False]
+    assert 9.99 <= state.deadline - prayer_started <= 10
+
+    state.handle_gesture("count", count=1, locked=True)
+    assert state.state == "PRAYER"
+    state.tick(state.deadline + 0.01)
+    assert state.state == "BLESSING"
 
 
 def test_prayer_entry_rearms_namaste_detection(isolated_db):

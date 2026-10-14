@@ -158,6 +158,8 @@ class CameraWorker:
         self.device = device
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
+        self._gesture_processing_enabled = threading.Event()
+        self._gesture_processing_enabled.set()
         self.latest_jpeg: bytes | None = None
         self.status = "Simulation mode" if not enabled else "Starting camera..."
         self.lock = GestureLock(window=8, min_confidence=0.65, hold_seconds=0.6)
@@ -187,6 +189,12 @@ class CameraWorker:
 
     def reset_namaste_lock(self) -> None:
         self.namaste_lock.reset()
+
+    def set_gesture_enabled(self, enabled: bool) -> None:
+        if enabled:
+            self._gesture_processing_enabled.set()
+        else:
+            self._gesture_processing_enabled.clear()
 
     def start(self) -> None:
         if self.enabled and (self._thread is None or not self._thread.is_alive()):
@@ -243,6 +251,10 @@ class CameraWorker:
                             logger.warning("Camera %s stopped returning frames", self.device)
                             break
                         frame = cv2.flip(frame, 1)
+                        if not self._gesture_processing_enabled.is_set():
+                            self.status = "Gesture tracking paused"
+                            self._publish_frame(cv2, frame, started)
+                            continue
                         if frame_is_too_dark(frame):
                             self.lock.update(None)
                             self.namaste_lock.update(None)
@@ -278,11 +290,7 @@ class CameraWorker:
                                 self.namaste_lock.update(None)
                                 self.status = "Camera connected — show your hand inside the guide"
                                 self.on_gesture("count", count=None, confidence=0, progress=0, locked=False)
-                        _, encoded = cv2.imencode(".jpg", frame)
-                        self.latest_jpeg = encoded.tobytes()
-                        elapsed = time.perf_counter() - started
-                        if elapsed < 1 / 30:
-                            self._stop.wait(1 / 30 - elapsed)
+                        self._publish_frame(cv2, frame, started)
             except Exception as exc:
                 self.status = f"Hand tracking failed: {exc}"
                 logger.exception("Camera hand tracking failed")
@@ -290,6 +298,13 @@ class CameraWorker:
             finally:
                 capture.release()
         self.status = "Camera stopped"
+
+    def _publish_frame(self, cv2, frame, started: float) -> None:
+        _, encoded = cv2.imencode(".jpg", frame)
+        self.latest_jpeg = encoded.tobytes()
+        elapsed = time.perf_counter() - started
+        if elapsed < 1 / 30:
+            self._stop.wait(1 / 30 - elapsed)
 
     def _open_capture(self, cv2):
         backends = [None]

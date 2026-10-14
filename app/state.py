@@ -30,7 +30,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "sound_enabled": True,
 }
 DIFFICULTY_SLOTS = ["Moderate", "Easy", "Difficult", "Easy", "Difficult"]
-POST_QUIZ_BLESSING_DELAY_SECONDS = 5
+POST_QUIZ_PRAYER_SECONDS = 10
 
 
 class QuizState:
@@ -53,7 +53,6 @@ class QuizState:
         self.selected_answer: int | None = None
         self.feedback_phase = ""
         self.feedback_deadline: float | None = None
-        self.post_quiz_blessing_deadline: float | None = None
         self.leaderboard_id: int | None = None
         self.player_rank: int | None = None
         self.previous_player_questions: set[str] = set()
@@ -62,6 +61,7 @@ class QuizState:
         self._settings_changed = None
         self._question_changed = None
         self._gesture_reset = None
+        self._gesture_pipeline = None
         self._namaste_reset = None
         self._timers_paused_at: float | None = None
         self._leaderboard: list[dict[str, Any]] = []
@@ -143,8 +143,6 @@ class QuizState:
                     self.deadline += elapsed
                 if self.feedback_deadline is not None:
                     self.feedback_deadline += elapsed
-                if self.post_quiz_blessing_deadline is not None:
-                    self.post_quiz_blessing_deadline += elapsed
                 if self.state == "QUESTION":
                     self.answer_started += elapsed
                     self.payload["ends_at"] = float(self.payload["ends_at"]) + elapsed
@@ -162,22 +160,14 @@ class QuizState:
             if self.timers_paused:
                 return
             now = time.monotonic() if now is None else now
-            if self.post_quiz_blessing_deadline is not None and now >= self.post_quiz_blessing_deadline:
-                self._reveal_blessing(force=True)
-            elif self.state != "NAME" and now - self.last_activity >= self.settings["idle_seconds"]:
+            if self.state != "NAME" and now - self.last_activity >= self.settings["idle_seconds"]:
                 self._timeout("idle_reset")
                 self.reset()
             elif self.state == "QUESTION" and self.deadline is not None and now >= self.deadline:
                 self._timeout("question_timeout")
                 self._record_answer(None, timed_out=True)
             elif self.state == "RESULTS" and self.deadline is not None and now >= self.deadline:
-                if self._namaste_reset:
-                    self._namaste_reset()
-                self.state = "PRAYER"
-                self.payload = {"name": self.player, "prompt": "Take a moment. Join your hands in prayer to receive a blessing."}
-                self.deadline = now + float(self.settings["prayer_seconds"])
-                self.last_activity = now
-                self._publish()
+                self._enter_prayer(now)
             elif self.state == "FEEDBACK" and self.feedback_deadline is not None and now >= self.feedback_deadline:
                 if self.feedback_phase == "select":
                     self._show_feedback()
@@ -195,6 +185,9 @@ class QuizState:
 
     def set_gesture_reset(self, callback) -> None:
         self._gesture_reset = callback
+
+    def set_gesture_pipeline(self, callback) -> None:
+        self._gesture_pipeline = callback
 
     def set_namaste_reset(self, callback) -> None:
         self._namaste_reset = callback
@@ -216,6 +209,8 @@ class QuizState:
         awaiting_release: bool = False,
     ) -> None:
         with self._lock:
+            if self.state in {"PRAYER", "BLESSING"} and event in {"count", "namaste"}:
+                return
             now = time.monotonic()
             self.gesture = {"value": count if event == "count" else event, "confidence": confidence,
                             "progress": progress, "locked": locked, "awaiting_release": awaiting_release}
@@ -340,15 +335,9 @@ class QuizState:
                   "seconds_left": seconds_left, "points": points}
         if not selection_only:
             self.answers.append(answer)
-            self._schedule_post_quiz_blessing()
             self._show_feedback(answer, question)
             return
         self.answers.append(answer)
-        self._schedule_post_quiz_blessing()
-
-    def _schedule_post_quiz_blessing(self) -> None:
-        if self.questions and self.question_index == len(self.questions) - 1:
-            self.post_quiz_blessing_deadline = time.monotonic() + POST_QUIZ_BLESSING_DELAY_SECONDS
 
     def _show_feedback(self, answer: dict[str, Any] | None = None, question: dict[str, Any] | None = None) -> None:
         if question is None:
@@ -377,6 +366,7 @@ class QuizState:
             self._begin_question()
         else:
             self._finish_quiz()
+            self._enter_prayer()
 
     def _finish_quiz(self) -> None:
         if not self.player:
@@ -395,13 +385,27 @@ class QuizState:
         self.payload = {"name": self.player, "score": score, "rank": self.player_rank, "prompt": f"You are #{self.player_rank}"}
         self.deadline = time.monotonic() + 7
         self.last_activity = time.monotonic()
+
+    def _enter_prayer(self, now: float | None = None) -> None:
+        if self._namaste_reset:
+            self._namaste_reset()
+        if self._gesture_reset:
+            self._gesture_reset()
+        if self._gesture_pipeline:
+            self._gesture_pipeline(False)
+        self.state = "PRAYER"
+        self.payload = {
+            "name": self.player,
+            "prompt": "Join your hands in prayer. A blessing will appear shortly.",
+        }
+        self.deadline = (time.monotonic() if now is None else now) + POST_QUIZ_PRAYER_SECONDS
+        self.feedback_deadline = None
+        self.last_activity = time.monotonic() if now is None else now
         self._publish()
 
-    def _reveal_blessing(self, *, force: bool = False) -> None:
-        if self.state != "PRAYER" and not force:
+    def _reveal_blessing(self) -> None:
+        if self.state != "PRAYER":
             return
-        if force and self.state != "RESULTS" and self.questions and len(self.answers) == len(self.questions):
-            self._finish_quiz()
         goddess, slogan = self.blessing_picker.pick(load_json("slogans.json"))
         image_file = next(filename for filename, label in GODDESSES if label == goddess)
         with SessionLocal() as db:
@@ -413,7 +417,6 @@ class QuizState:
             "slogan": slogan["text"], "prompt": f"Blessings, {self.player}",
         }
         self.deadline = time.monotonic() + float(self.settings["blessing_seconds"])
-        self.post_quiz_blessing_deadline = None
         self.last_activity = time.monotonic()
         self._publish()
 
@@ -421,12 +424,13 @@ class QuizState:
         with self._lock:
             if self._gesture_reset:
                 self._gesture_reset()
+            if self._gesture_pipeline:
+                self._gesture_pipeline(True)
             self.state = "NAME"
             self.timers_paused = False
             self.payload = {"prompt": "Please say your name"}
             self.deadline = None
             self.feedback_deadline = None
-            self.post_quiz_blessing_deadline = None
             self.questions = []
             self.answers = []
             self.player = ""

@@ -51,6 +51,7 @@ def configure_runtime(quiz_state, camera_worker) -> None:
     state.set_settings_changed(camera.configure)
     state.set_question_changed(camera.reset_locks)
     state.set_gesture_reset(camera.reset_locks)
+    state.set_gesture_pipeline(camera.set_gesture_enabled)
     state.set_namaste_reset(camera.reset_namaste_lock)
 
 
