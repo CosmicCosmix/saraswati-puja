@@ -990,6 +990,15 @@
             display: none;
         }
 
+        .prayer-audio-control {
+            position: fixed;
+            z-index: 1001;
+            bottom: 20px;
+            left: 50%;
+            width: min(calc(100% - 32px), 360px);
+            transform: translateX(-50%);
+        }
+
         .blessing-art {
             justify-self: end;
             display: block;
@@ -1282,6 +1291,9 @@
             <p id="blessing-recipient" class="blessing-recipient"></p>
         </div>
     </section>
+    <button id="prayer-audio-enable" class="primary-button prayer-audio-control" type="button" hidden>
+        Tap to enable devotional music
+    </button>
 
     <!-- Preserve the existing server-side template flag -->
     <script>

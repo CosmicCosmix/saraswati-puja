@@ -19,7 +19,12 @@
   let previousState = "";
   let previousView = "";
   let soundEnabled = true;
-  let prayerAudio = null;
+  const prayerAudio = new Audio("/static/sounds/sarasvati%20pooja%20mix.mp3");
+  prayerAudio.loop = true;
+  prayerAudio.preload = "none";
+  const prayerAudioButton = document.getElementById("prayer-audio-enable");
+  let prayerSessionActive = false;
+  let prayerPlaybackAttempted = false;
   const audioContext = window.AudioContext ? new AudioContext() : null;
   let currentSnapshot = null;
   let speechRecognition = null;
@@ -206,23 +211,52 @@
   }
 
   function stopPrayerMusic() {
-    if (prayerAudio) {
-      clearInterval(prayerAudio);
-      prayerAudio = null;
+    prayerAudio.pause();
+    prayerAudio.currentTime = 0;
+    prayerPlaybackAttempted = false;
+    prayerAudioButton.hidden = true;
+  }
+
+  async function startPrayerMusic(force = false) {
+    if (!prayerSessionActive || !soundEnabled || (!force && prayerPlaybackAttempted) || !prayerAudio.paused) return;
+    prayerPlaybackAttempted = true;
+    try {
+      await prayerAudio.play();
+      prayerAudioButton.hidden = true;
+    } catch (error) {
+      if (!prayerSessionActive || !soundEnabled) return;
+      prayerAudioButton.textContent = error.name === "NotAllowedError"
+        ? "Tap to enable devotional music"
+        : "Try devotional music again";
+      prayerAudioButton.hidden = false;
+      if (error.name === "NotAllowedError") {
+        console.info("Browser blocked devotional music autoplay; waiting for a user gesture.");
+      } else {
+        console.error("Could not play devotional music", error);
+      }
     }
+  }
+
+  function syncPrayerMusic(mode) {
+    const active = mode === "PRAYER" || mode === "BLESSING";
+    if (!active) {
+      if (prayerSessionActive) stopPrayerMusic();
+      prayerSessionActive = false;
+      return;
+    }
+    if (!prayerSessionActive) prayerPlaybackAttempted = false;
+    prayerSessionActive = true;
+    if (!soundEnabled) {
+      stopPrayerMusic();
+      return;
+    }
+    if (prayerAudio.paused) startPrayerMusic();
   }
 
   function playCue(name) {
     if (!soundEnabled) { stopPrayerMusic(); return; }
     if (name === "IDLE") { tone(523, .24, .035); return; }
-    if (name === "PRAYER") {
-      if (!prayerAudio) {
-        let beat = 0;
-        prayerAudio = setInterval(() => tone([440, 554, 659][beat++ % 3], .75, .018), 1150);
-      }
-      return;
-    }
-    stopPrayerMusic();
+    if (name === "PRAYER") return;
     if (name === "BLESSING") {
       tone(740, .35, .09);
       setTimeout(() => tone(988, .55, .07), 180);
@@ -274,6 +308,7 @@
       window.setTimeout(startSpeechRecognition, 0);
     }
     soundEnabled = state.sound_enabled !== false;
+    syncPrayerMusic(mode);
     if (mode !== previousState) {
       playCue(mode);
       if (mode === "BLESSING" && soundEnabled && "speechSynthesis" in window) {
@@ -385,6 +420,14 @@
     socket.onclose = () => setTimeout(connect, 1000);
   }
   connect();
+  prayerAudioButton.addEventListener("click", () => startPrayerMusic(true));
+  prayerAudio.addEventListener("error", () => {
+    if (!prayerSessionActive || !soundEnabled) return;
+    prayerAudioButton.textContent = "Try devotional music again";
+    prayerAudioButton.hidden = false;
+    console.error("Could not load devotional music", prayerAudio.error);
+  });
+  prayerAudio.addEventListener("playing", () => { prayerAudioButton.hidden = true; });
   const cameraStatus = document.getElementById("camera-status");
   async function refreshCameraStatus() {
     try {
