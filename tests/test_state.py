@@ -20,10 +20,10 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     assert state.state == "READY"
     state.handle_gesture("count", count=1)
     assert state.state == "QUESTION"
-    assert len(state.questions) == 6
-    assert state.payload["total"] == 6
-    assert len({question["id"] for question in state.questions}) == 6
-    for _ in range(6):
+    assert len(state.questions) == 3
+    assert state.payload["total"] == 3
+    assert len({question["id"] for question in state.questions}) == 3
+    for _ in range(3):
         current = state.questions[state.question_index]
         state.handle_gesture("count", count=current["correct_index"] + 1)
         assert state.state == "FEEDBACK"
@@ -31,7 +31,7 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
         assert state.state == "FEEDBACK"
         state.tick(state.feedback_deadline + 4.01)
     assert state.state == "RESULTS"
-    assert len(state.answers) == 6
+    assert len(state.answers) == 3
     assert state.payload["score"] == sum(answer["points"] for answer in state.answers)
     assert state.get_leaderboard()[0]["name"] == "Test Visitor"
     state.tick(state.deadline + 0.01)
@@ -48,19 +48,19 @@ def test_simulated_session_transitions_through_blessing(isolated_db):
     assert state.state == "NAME"
 
 
-def test_question_selection_samples_six_unique_questions_from_pool(isolated_db):
+def test_question_selection_samples_three_unique_questions_from_pool(isolated_db):
     state = QuizState(simulate=True)
     pool = load_json("questions.json")
 
     selected = state._choose_questions()
 
-    assert len(selected) == 6
-    assert len({question["id"] for question in selected}) == 6
+    assert len(selected) == 3
+    assert len({question["id"] for question in selected}) == 3
     assert {question["id"] for question in selected} <= {question["id"] for question in pool}
 
     next_selected = state._choose_questions()
-    assert len(next_selected) == 6
-    assert len({question["id"] for question in next_selected}) == 6
+    assert len(next_selected) == 3
+    assert len({question["id"] for question in next_selected}) == 3
     assert {question["id"] for question in next_selected} <= {question["id"] for question in pool}
 
 

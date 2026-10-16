@@ -29,7 +29,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "blessing_seconds": 12,
     "sound_enabled": True,
 }
-QUESTIONS_PER_SESSION = 6
+QUESTIONS_PER_SESSION = 3
 
 
 class QuizState:
